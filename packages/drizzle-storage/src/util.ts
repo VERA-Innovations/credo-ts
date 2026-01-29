@@ -1,17 +1,26 @@
 // TODO: Maybe fix this for environment apart from node
-import { join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+
 import { and, eq, gt, lt, or } from 'drizzle-orm'
 import type { ExtraConfigColumn } from 'drizzle-orm/pg-core'
 import type { SQLiteColumn } from 'drizzle-orm/sqlite-core'
 import type { DrizzleRecordBundle } from './DrizzleRecord'
 
-const __filename = fileURLToPath(import.meta.url)
-const dirname = join(__filename, '..')
+// For running - start
+// import { join } from 'node:path'
+// import { fileURLToPath } from 'node:url'
+// const __filename = fileURLToPath(import.meta.url)
+// const dirname = join(__filename, '..')
 
+// export const rootDirectory = `${dirname}/..`
+// const addSchemaExtension = (path: string) => (dirname.endsWith('/src') ? `${path}.ts` : `${path}.mjs`)
+// For running - end
+
+// For migrations - start
+export const dirname = import.meta.dirname
 export const rootDirectory = `${dirname}/..`
 
 const addSchemaExtension = (schemaPath: string) => (dirname.endsWith('/src') ? `${schemaPath}.ts` : `${schemaPath}.mjs`)
+// For migrations - end
 
 export const bundleMigrationDefinition = (bundle: string): DrizzleRecordBundle['migrations'] => ({
   postgres: {

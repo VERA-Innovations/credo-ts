@@ -20,6 +20,10 @@
       "cli": "./build/didcomm/bundle.mjs",
       "import": "./src/didcomm/bundle.ts"
     },
+    "./media-sharing": {
+      "cli": "./build/media-sharing/bundle.mjs",
+      "import": "./src/media-sharing/bundle.ts"
+    },
     "./action-menu": {
       "cli": "./build/action-menu/bundle.mjs",
       "import": "./src/action-menu/bundle.ts"
@@ -63,6 +67,9 @@
       "./didcomm": "./build/didcomm/bundle.mjs",
       "./didcomm/sqlite": "./build/didcomm/sqlite.mjs",
       "./didcomm/postgres": "./build/didcomm/postgres.mjs",
+      "./media-sharing": "./build/media-sharing/bundle.mjs",
+      "./media-sharing/postgres": "./build/media-sharing/postgres.mjs",
+      "./media-sharing/sqlite": "./build/media-sharing/sqlite.mjs",
       "./action-menu": "./build/action-menu/bundle.mjs",
       "./action-menu/sqlite": "./build/action-menu/sqlite.mjs",
       "./action-menu/postgres": "./build/action-menu/postgres.mjs",
@@ -96,11 +103,11 @@
   "scripts": {
     "build": "tsdown --config-loader unconfig",
     "prepublishOnly": "pnpm run build",
-    "cli:local:compiled": "node --conditions cli bin.mjs --bundle core --bundle didcomm --bundle anoncreds --bundle action-menu --bundle question-answer --bundle drpc --bundle tenants --bundle openid4vc",
-    "cli:local": "vite-node cli/bin.ts --bundle core --bundle didcomm --bundle anoncreds --bundle action-menu --bundle question-answer --bundle drpc --bundle tenants --bundle openid4vc",
+    "cli:local:compiled": "node --conditions cli bin.mjs --bundle core --bundle didcomm --bundle anoncreds --bundle action-menu --bundle question-answer --bundle drpc --bundle tenants --bundle openid4vc --bundle media-sharing",
+    "cli:local": "vite-node cli/bin.ts --bundle core --bundle didcomm --bundle anoncreds --bundle action-menu --bundle question-answer --bundle tenants --bundle media-sharing",
     "cli:local:generate": "pnpm cli:local generate",
     "cli:local:compiled:generate": "pnpm cli:local:compiled generate",
-    "cli:local:migrate:postgres": "pnpm cli:local migrate --dialect postgres --database-url \"postgresql://postgres:postgres@localhost:5432/postgres\"",
+    "cli:local:migrate:postgres": "pnpm cli:local migrate --dialect postgres --database-url \"postgresql://postgres:postgres@localhost:5432/vera-mediasharing\"",
     "cli:local:compiled:migrate:postgres": "pnpm cli:local:compiled migrate --dialect postgres --database-url \"postgresql://postgres:postgres@localhost:5432/postgres\"",
     "cli:local:migrate:sqlite": "pnpm cli:local migrate --dialect sqlite --database-url \"file:local.db\"",
     "cli:local:compiled:migrate:sqlite": "pnpm cli:local:compiled migrate --dialect sqlite --database-url \"file:local.db\"",
@@ -108,6 +115,7 @@
     "cli:local:studio:sqlite": "pnpm cli:local studio --dialect sqlite --database-url \"file:../../db.db\""
   },
   "dependencies": {
+    "@2060.io/credo-ts-didcomm-media-sharing": "^0.0.6",
     "@credo-ts/action-menu": "workspace:*",
     "@credo-ts/anoncreds": "workspace:*",
     "@credo-ts/core": "workspace:*",
