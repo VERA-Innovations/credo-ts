@@ -1,12 +1,11 @@
-import { JsonTransformer, type TagsBase } from '@credo-ts/core'
+import { DidCommMediaSharingRecord, SharedMediaItem } from '@2060.io/credo-ts-didcomm-media-sharing'
+import { JsonTransformer, utils, type TagsBase } from '@credo-ts/core'
+import { BaseDrizzleRecordAdapter, type DrizzleAdapterRecordValues } from '../../adapter'
+import type { DrizzleDatabase } from '../../DrizzleDatabase'
 import * as postgres from './postgres'
 import * as sqlite from './sqlite'
-import { DidCommMediaSharingRecord, SharedMediaItem } from '@2060.io/credo-ts-didcomm-media-sharing'
-import { type DrizzleAdapterRecordValues, BaseDrizzleRecordAdapter } from '../../adapter'
-import type { DrizzleDatabase } from '../../DrizzleDatabase'
 
-type DrizzleDidcommMediaSharingAdapterValues =
-  DrizzleAdapterRecordValues<(typeof sqlite)['didcommMediaSharing']>
+type DrizzleDidcommMediaSharingAdapterValues = DrizzleAdapterRecordValues<(typeof sqlite)['didcommMediaSharing']>
 
 export class DrizzleDidcommMediaSharingRecordAdapter extends BaseDrizzleRecordAdapter<
   DidCommMediaSharingRecord | any,
@@ -24,34 +23,22 @@ export class DrizzleDidcommMediaSharingRecordAdapter extends BaseDrizzleRecordAd
   }
 
   public getValues(record: DidCommMediaSharingRecord) {
-    const {
-      role,
-      connectionId,
-      threadId,
-      parentThreadId,
-      description,
-      ...customTags
-    } = record.getTags()
+    const { role, connectionId, threadId, parentThreadId, description, ...customTags } = record.getTags()
 
     return {
-
       sentTime: record.sentTime,
 
       connectionId,
-      threadId,
+      threadId: threadId ?? utils.uuid(),
       parentThreadId,
       description,
 
       role,
       state: record.state,
 
-      items: record.items
-        ? JsonTransformer.toJSON(record.items) as SharedMediaItem[]
-        : null,
+      items: record.items ? (JsonTransformer.toJSON(record.items) as SharedMediaItem[]) : null,
 
-      metadata: record.metadata
-        ? JsonTransformer.toJSON(record.metadata)
-        : null,
+      metadata: record.metadata ? JsonTransformer.toJSON(record.metadata) : null,
 
       customTags,
     }

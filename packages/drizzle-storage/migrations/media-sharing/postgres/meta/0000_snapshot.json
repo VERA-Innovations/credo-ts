@@ -1,5 +1,5 @@
 {
-  "id": "b61709e4-f6fd-45b0-bb1f-99764347da3e",
+  "id": "f7bc8e2d-831d-48d9-8c85-356f298df0d0",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -74,19 +74,19 @@
           "name": "thread_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "parent_thread_id": {
           "name": "parent_thread_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "description": {
           "name": "description",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "items": {
           "name": "items",

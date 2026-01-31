@@ -3,7 +3,7 @@ import type {
   DidCommMediaSharingState,
   SharedMediaItem,
 } from '@2060.io/credo-ts-didcomm-media-sharing'
-import { foreignKey, jsonb, pgEnum, pgTable, text, unique, timestamp } from 'drizzle-orm/pg-core'
+import { foreignKey, jsonb, pgEnum, pgTable, text, timestamp, unique } from 'drizzle-orm/pg-core'
 import { didcommConnection } from '../../didcomm/postgres'
 import { getPostgresBaseRecordTable, postgresBaseRecordIndexes } from '../../postgres'
 import { exhaustiveArray } from '../../util'
@@ -15,19 +15,10 @@ const mediaSharingStates = exhaustiveArray(
   {} as DidCommMediaSharingState,
   ['init', 'media-requested', 'media-shared', 'done'] as const
 )
-export const didcommMediaSharingStateEnum = pgEnum(
-  'DidcommMediaSharingState',
-  mediaSharingStates
-)
+export const didcommMediaSharingStateEnum = pgEnum('DidcommMediaSharingState', mediaSharingStates)
 
-const mediaSharingRoles = exhaustiveArray(
-  {} as DidCommMediaSharingRole,
-  ['sender', 'receiver'] as const
-)
-export const didcommMediaSharingRoleEnum = pgEnum(
-  'DidcommMediaSharingRole',
-  mediaSharingRoles
-)
+const mediaSharingRoles = exhaustiveArray({} as DidCommMediaSharingRole, ['sender', 'receiver'] as const)
+export const didcommMediaSharingRoleEnum = pgEnum('DidcommMediaSharingRole', mediaSharingRoles)
 
 /**
  * Table
@@ -43,9 +34,9 @@ export const didcommMediaSharing = pgTable(
     role: didcommMediaSharingRoleEnum().notNull(),
 
     connectionId: text('connection_id').notNull(),
-    threadId: text('thread_id').notNull(),
-    parentThreadId: text('parent_thread_id').notNull(),
-    description: text('description').notNull(),
+    threadId: text('thread_id'),
+    parentThreadId: text('parent_thread_id'),
+    description: text('description'),
 
     items: jsonb('items').$type<SharedMediaItem[]>(),
   },

@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "2735f539-b9f2-422d-8c83-19d42b39717e",
+  "id": "8b938fa9-8c51-4c9f-938e-0742260a28dc",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "DidcommMediaSharing": {
@@ -81,21 +81,21 @@
           "name": "thread_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "parent_thread_id": {
           "name": "parent_thread_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "description": {
           "name": "description",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "items": {

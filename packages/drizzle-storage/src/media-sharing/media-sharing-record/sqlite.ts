@@ -3,7 +3,7 @@ import type {
   DidCommMediaSharingState,
   SharedMediaItem,
 } from '@2060.io/credo-ts-didcomm-media-sharing'
-import { foreignKey, sqliteTable, text, unique, integer } from 'drizzle-orm/sqlite-core'
+import { foreignKey, integer, sqliteTable, text, unique } from 'drizzle-orm/sqlite-core'
 import { didcommConnection } from '../../didcomm/sqlite'
 import { getSqliteBaseRecordTable, sqliteBaseRecordIndexes } from '../../sqlite'
 
@@ -16,16 +16,15 @@ export const didcommMediaSharing = sqliteTable(
      * SQLite stores timestamps as integers (ms since epoch)
      */
     // sentTime: integer('sent_time').notNull(),
-        sentTime: integer('sent_time', { mode: 'timestamp_ms' }),
-    
+    sentTime: integer('sent_time', { mode: 'timestamp_ms' }),
 
     state: text('state').$type<DidCommMediaSharingState>().notNull(),
     role: text('role').$type<DidCommMediaSharingRole>().notNull(),
 
     connectionId: text('connection_id').notNull(),
-    threadId: text('thread_id').notNull(),
-    parentThreadId: text('parent_thread_id').notNull(),
-    description: text('description').notNull(),
+    threadId: text('thread_id'),
+    parentThreadId: text('parent_thread_id'),
+    description: text('description'),
 
     items: text('items', { mode: 'json' }).$type<SharedMediaItem[]>(),
   },

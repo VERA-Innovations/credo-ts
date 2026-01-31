@@ -11,9 +11,9 @@ CREATE TABLE "DidcommMediaSharing" (
 	"state" "DidcommMediaSharingState" NOT NULL,
 	"role" "DidcommMediaSharingRole" NOT NULL,
 	"connection_id" text NOT NULL,
-	"thread_id" text NOT NULL,
-	"parent_thread_id" text NOT NULL,
-	"description" text NOT NULL,
+	"thread_id" text,
+	"parent_thread_id" text,
+	"description" text,
 	"items" jsonb,
 	CONSTRAINT "didcommMediaSharing_pk" PRIMARY KEY("context_correlation_id","id"),
 	CONSTRAINT "DidcommMediaSharing_context_correlation_id_thread_id_unique" UNIQUE("context_correlation_id","thread_id")
