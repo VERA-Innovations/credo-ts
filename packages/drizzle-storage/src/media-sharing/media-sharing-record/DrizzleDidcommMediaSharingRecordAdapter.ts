@@ -31,7 +31,7 @@ export class DrizzleDidcommMediaSharingRecordAdapter extends BaseDrizzleRecordAd
       connectionId,
       threadId: threadId ?? utils.uuid(),
       parentThreadId,
-      description,
+      description: description ?? record?.description ?? null,
 
       role,
       state: record.state,
