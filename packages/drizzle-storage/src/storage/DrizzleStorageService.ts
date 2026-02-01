@@ -31,7 +31,10 @@ export class DrizzleStorageService<T extends BaseRecord> implements StorageServi
 
   public async save(agentContext: AgentContext, record: T): Promise<void> {
     record.createdAt = record.createdAt ?? new Date()
-    record.updatedAt = record.createdAt
+    // Triage: For some reason this would give error when storing the connection record
+    // Probably need to add it in credo-main branch
+    // Als, the logic makes more sense to use current time stamp then to take `createdAt`
+    record.updatedAt = new Date()
 
     const adapter = this.getAdapterForRecordType(record.type)
     await adapter.insert(agentContext, record)
