@@ -11,6 +11,7 @@ const bundles = [
   'openid4vc',
   'anoncreds',
   'question-answer',
+  'user-profile',
   'media-sharing',
 ]
 const bundleEntry = (bundle: string) => [

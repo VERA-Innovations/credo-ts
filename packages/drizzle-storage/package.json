@@ -24,6 +24,10 @@
       "cli": "./build/media-sharing/bundle.mjs",
       "import": "./src/media-sharing/bundle.ts"
     },
+    "./user-profile": {
+      "cli": "./build/user-profile/bundle.mjs",
+      "import": "./src/user-profile/bundle.ts"
+    },
     "./action-menu": {
       "cli": "./build/action-menu/bundle.mjs",
       "import": "./src/action-menu/bundle.ts"
@@ -70,6 +74,9 @@
       "./media-sharing": "./build/media-sharing/bundle.mjs",
       "./media-sharing/postgres": "./build/media-sharing/postgres.mjs",
       "./media-sharing/sqlite": "./build/media-sharing/sqlite.mjs",
+      "./user-profile": "./build/user-profile/bundle.mjs",
+      "./user-profile/postgres": "./build/user-profile/postgres.mjs",
+      "./user-profile/sqlite": "./build/user-profile/sqlite.mjs",
       "./action-menu": "./build/action-menu/bundle.mjs",
       "./action-menu/sqlite": "./build/action-menu/sqlite.mjs",
       "./action-menu/postgres": "./build/action-menu/postgres.mjs",
@@ -103,8 +110,8 @@
   "scripts": {
     "build": "tsdown --config-loader unconfig",
     "prepublishOnly": "pnpm run build",
-    "cli:local:compiled": "node --conditions cli bin.mjs --bundle core --bundle didcomm --bundle anoncreds --bundle action-menu --bundle question-answer --bundle drpc --bundle tenants --bundle openid4vc --bundle media-sharing",
-    "cli:local": "vite-node cli/bin.ts --bundle core --bundle didcomm --bundle anoncreds --bundle action-menu --bundle question-answer --bundle tenants --bundle media-sharing",
+    "cli:local:compiled": "node --conditions cli bin.mjs --bundle core --bundle didcomm --bundle anoncreds --bundle action-menu --bundle question-answer --bundle drpc --bundle tenants --bundle openid4vc --bundle user-profile --bundle media-sharing",
+    "cli:local": "vite-node cli/bin.ts --bundle core --bundle didcomm --bundle anoncreds --bundle action-menu --bundle question-answer --bundle tenants --bundle user-profile --bundle media-sharing",
     "cli:local:generate": "pnpm cli:local generate",
     "cli:local:compiled:generate": "pnpm cli:local:compiled generate",
     "cli:local:migrate:postgres": "pnpm cli:local migrate --dialect postgres --database-url \"postgresql://postgres:postgres@localhost:5432/vera-mediasharing\"",
@@ -116,6 +123,7 @@
   },
   "dependencies": {
     "@2060.io/credo-ts-didcomm-media-sharing": "^0.0.6",
+    "@2060.io/credo-ts-didcomm-user-profile": "^0.0.8",
     "@credo-ts/action-menu": "workspace:*",
     "@credo-ts/anoncreds": "workspace:*",
     "@credo-ts/core": "workspace:*",
