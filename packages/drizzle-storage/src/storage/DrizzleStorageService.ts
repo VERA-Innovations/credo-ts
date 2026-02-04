@@ -10,6 +10,7 @@ import { injectable } from '@credo-ts/core'
 import { BaseDrizzleRecordAdapter } from '../adapter/BaseDrizzleRecordAdapter'
 import { DrizzleStorageModuleConfig } from '../DrizzleStorageModuleConfig'
 import { CredoDrizzleStorageError } from '../error/CredoDrizzleStorageError'
+import { decryptBasicMessageContent, encryptBasicMessageContent } from './utils/encrypt'
 
 @injectable()
 export class DrizzleStorageService<T extends BaseRecord> implements StorageService<T> {
@@ -36,12 +37,21 @@ export class DrizzleStorageService<T extends BaseRecord> implements StorageServi
     // Als, the logic makes more sense to use current time stamp then to take `createdAt`
     record.updatedAt = new Date()
 
+    
+    if (record.type === 'BasicMessageRecord') {
+      (record as any).content = await encryptBasicMessageContent(agentContext, (record as any).content)
+    }
+
     const adapter = this.getAdapterForRecordType(record.type)
     await adapter.insert(agentContext, record)
   }
 
   public async update(agentContext: AgentContext, record: T): Promise<void> {
     record.updatedAt = new Date()
+
+    if (record.type === 'BasicMessageRecord') {
+      (record as any).content = await encryptBasicMessageContent(agentContext, (record as any).content)
+    }
 
     const adapter = this.getAdapterForRecordType(record.type)
     await adapter.update(agentContext, record)
@@ -83,6 +93,9 @@ export class DrizzleStorageService<T extends BaseRecord> implements StorageServi
     const adapter = this.getAdapterForRecordType(recordClass.type)
 
     const record = await adapter.getById(agentContext, id)
+    if (record.type === 'BasicMessageRecord') {
+      (record as any).content = await decryptBasicMessageContent(agentContext, (record as any).content)
+    }
     return record
   }
 
@@ -90,6 +103,13 @@ export class DrizzleStorageService<T extends BaseRecord> implements StorageServi
     const adapter = this.getAdapterForRecordType(recordClass.type)
 
     const records = await adapter.query(agentContext)
+
+    if (recordClass.type === 'BasicMessageRecord' && records.length > 0) {
+      for (const record of records) {
+        (record as any).content = await decryptBasicMessageContent(agentContext, (record as any).content)
+      }
+    }
+
     return records
   }
 
@@ -102,6 +122,11 @@ export class DrizzleStorageService<T extends BaseRecord> implements StorageServi
     const adapter = this.getAdapterForRecordType(recordClass.type)
 
     const records = await adapter.query(agentContext, query, queryOptions)
+    if (recordClass.type === 'BasicMessageRecord' && records.length > 0) {
+      for (const record of records) {
+        (record as any).content = await decryptBasicMessageContent(agentContext, (record as any).content)
+      }
+    }
     return records
   }
 }

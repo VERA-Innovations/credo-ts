@@ -699,6 +699,9 @@ importers:
       '@2060.io/credo-ts-didcomm-media-sharing':
         specifier: ^0.0.6
         version: 0.0.6(typescript@5.9.3)
+      '@2060.io/credo-ts-didcomm-user-profile':
+        specifier: ^0.0.8
+        version: 0.0.8(@credo-ts/core@packages+core)(@credo-ts/didcomm@packages+didcomm)
       '@credo-ts/action-menu':
         specifier: workspace:*
         version: link:../action-menu
@@ -732,6 +735,9 @@ importers:
       drizzle-kit:
         specifier: ^0.31.7
         version: 0.31.7
+      libsodium-wrappers:
+        specifier: ^0.8.2
+        version: 0.8.2
       shell:
         specifier: ^0.12.0
         version: 0.12.0
@@ -1118,6 +1124,12 @@ packages:
 
   '@2060.io/credo-ts-didcomm-media-sharing@0.0.6':
     resolution: {integrity: sha512-Wa/bXVLGbC5WUXCSOcjVkikI81RxWXGJHQsMmEtBzDlzjmeBg0OjIMbrGJN3GnzC+OlsF0ETRqlJTsbvuVs3mA==}
+
+  '@2060.io/credo-ts-didcomm-user-profile@0.0.8':
+    resolution: {integrity: sha512-67Zfd5MD4buh6FxRBBcYYYMKb+jbel3bqFreAJby/GiP1I0ZlV/Owo0FCWRO/k7D5uDNS1VSmleuPXZ8nfcxaA==}
+    peerDependencies:
+      '@credo-ts/core': ^0.6.1
+      '@credo-ts/didcomm': ^0.6.1
 
   '@2060.io/ffi-napi@4.0.9':
     resolution: {integrity: sha512-JfVREbtkJhMXSUpya3JCzDumdjeZDCKv4PemiWK+pts5CYgdoMidxeySVlFeF5pHqbBpox4I0Be7sDwAq4N0VQ==}
@@ -4429,6 +4441,9 @@ packages:
   class-transformer@0.5.1:
     resolution: {integrity: sha512-SQa1Ws6hUbfC98vKGxZH3KFY0Y1lm5Zm0SY8XX9zbK7FJCyVEac3ATW0RIpwzW+oOfmHE5PMPufDG9hCfoEOMw==}
 
+  class-validator@0.14.1:
+    resolution: {integrity: sha512-2VEG9JICxIqTpoK1eMzZqaV+u/EiwEJkMGzTrZf6sU/fwsnOITVgYJ8yojSy6CaXtO9V0Cc6ZQZ8h8m4UBuLwQ==}
+
   class-validator@0.14.3:
     resolution: {integrity: sha512-rXXekcjofVN1LTOSw+u4u9WXVEUvNBVjORW154q/IdmYWy1nMbOU9aNtZB0t8m+FJQ9q91jlr2f9CwwUFdFMRA==}
 
@@ -6106,6 +6121,12 @@ packages:
 
   libphonenumber-js@1.12.26:
     resolution: {integrity: sha512-MagMOuqEXB2Pa90cWE+BoCmcKJx+de5uBIicaUkQ+uiEslZ0OBMNOkSZT/36syXNHu68UeayTxPm3DYM2IHoLQ==}
+
+  libsodium-wrappers@0.8.2:
+    resolution: {integrity: sha512-VFLmfxkxo+U9q60tjcnSomQBRx2UzlRjKWJqvB4K1pUqsMQg4cu3QXA2nrcsj9A1qRsnJBbi2Ozx1hsiDoCkhw==}
+
+  libsodium@0.8.2:
+    resolution: {integrity: sha512-TsnGYMoZtpweT+kR+lOv5TVsnJ/9U0FZOsLFzFOMWmxqOAYXjX3fsrPAW+i1LthgDKXJnI9A8dWEanT1tnJKIw==}
 
   libsql@0.5.22:
     resolution: {integrity: sha512-NscWthMQt7fpU8lqd7LXMvT9pi+KhhmTHAJWUB/Lj6MWa0MKFv0F2V4C6WKKpjCVZl0VwcDz4nOI3CyaT1DDiA==}
@@ -8683,6 +8704,16 @@ snapshots:
       - encoding
       - supports-color
       - typescript
+
+  '@2060.io/credo-ts-didcomm-user-profile@0.0.8(@credo-ts/core@packages+core)(@credo-ts/didcomm@packages+didcomm)':
+    dependencies:
+      '@credo-ts/core': link:packages/core
+      '@credo-ts/didcomm': link:packages/didcomm
+      class-transformer: 0.5.1
+      class-validator: 0.14.1
+      reflect-metadata: 0.1.14
+      rxjs: 7.8.2
+      tsyringe: 4.10.0
 
   '@2060.io/ffi-napi@4.0.9':
     dependencies:
@@ -13138,6 +13169,12 @@ snapshots:
 
   class-transformer@0.5.1: {}
 
+  class-validator@0.14.1:
+    dependencies:
+      '@types/validator': 13.15.9
+      libphonenumber-js: 1.12.26
+      validator: 13.15.23
+
   class-validator@0.14.3:
     dependencies:
       '@types/validator': 13.15.9
@@ -14994,6 +15031,12 @@ snapshots:
       type-check: 0.3.2
 
   libphonenumber-js@1.12.26: {}
+
+  libsodium-wrappers@0.8.2:
+    dependencies:
+      libsodium: 0.8.2
+
+  libsodium@0.8.2: {}
 
   libsql@0.5.22:
     dependencies:
