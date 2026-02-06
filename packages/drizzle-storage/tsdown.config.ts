@@ -13,6 +13,7 @@ const bundles = [
   'question-answer',
   'user-profile',
   'media-sharing',
+  'private-media-sharing',
 ]
 const bundleEntry = (bundle: string) => [
   `src/${bundle}/bundle.ts`,
