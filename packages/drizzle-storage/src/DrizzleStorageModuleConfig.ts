@@ -7,6 +7,12 @@ import type { DrizzleRecord, DrizzleRecordBundle } from './DrizzleRecord'
 // biome-ignore lint/suspicious/noExplicitAny: no explanation
 export type AnyDrizzleDatabase = DrizzleDatabase<any, any>
 
+/**
+ * Configuration for encrypted columns per record type
+ * Maps record type name to list of column names to encrypt
+ */
+export type EncryptedColumnsConfig = Record<string, string[]>
+
 export interface DrizzleStorageModuleConfigOptions<Database extends AnyDrizzleDatabase = AnyDrizzleDatabase> {
   /**
    * The drizzle database to use. To not depend on specific drivers and support different
@@ -22,6 +28,17 @@ export interface DrizzleStorageModuleConfigOptions<Database extends AnyDrizzleDa
    * sqlite and postgres definition, as well as an adapter.
    */
   bundles: DrizzleRecordBundle[]
+  
+  /**
+   * Encryption key for at-rest encryption of configured columns
+   */
+  encryptionKey?: string
+
+  /**
+   * Configuration of which columns should be encrypted for each record type
+   * Example: { 'BasicMessageRecord': ['content'], 'OutofBandRecord': ['out_of_band_invitation'] }
+   */
+  encryptedColumns?: EncryptedColumnsConfig
 }
 
 /**
@@ -31,9 +48,13 @@ export class DrizzleStorageModuleConfig {
   public readonly database: AnyDrizzleDatabase
   public readonly adapters: AnyDrizzleAdapter[]
   public readonly schemas: Record<string, unknown>
+  public readonly encryptionKey?: string
+  public readonly encryptedColumns: EncryptedColumnsConfig
 
   public constructor(options: DrizzleStorageModuleConfigOptions) {
     this.database = options.database
+    this.encryptionKey = options.encryptionKey
+    this.encryptedColumns = options.encryptedColumns ?? {}
 
     // core MUST always be registered
     const allRecords: DrizzleRecord[] = Array.from(

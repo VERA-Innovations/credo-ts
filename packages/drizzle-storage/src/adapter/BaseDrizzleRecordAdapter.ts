@@ -87,10 +87,10 @@ export abstract class BaseDrizzleRecordAdapter<
     this.recordClass = recordClass
   }
 
-  public abstract getValues(record: CredoRecord): DrizzleAdapterValues<SQLiteTable>
+  public abstract getValues(record: CredoRecord, agentContext?: AgentContext): DrizzleAdapterValues<SQLiteTable>
   public getValuesWithBase(agentContext: AgentContext, record: CredoRecord) {
     return {
-      ...this.getValues(record),
+      ...this.getValues(record, agentContext),
 
       // Always store based on context correlation id
       contextCorrelationId: agentContext.contextCorrelationId,
@@ -102,15 +102,15 @@ export abstract class BaseDrizzleRecordAdapter<
     }
   }
 
-  private _toRecord(values: DrizzleAdapterRecordValues<SQLiteTable>): CredoRecord {
+  private _toRecord(values: DrizzleAdapterRecordValues<SQLiteTable>, agentContext?: AgentContext): CredoRecord {
     const filteredValues = Object.fromEntries(
       Object.entries(values).filter(([_key, value]) => value !== null)
     ) as DrizzleAdapterRecordValues<SQLiteTable>
 
-    return this.toRecord(filteredValues)
+    return this.toRecord(filteredValues, agentContext)
   }
 
-  public abstract toRecord(values: DrizzleAdapterRecordValues<SQLiteTable>): CredoRecord
+  public abstract toRecord(values: DrizzleAdapterRecordValues<SQLiteTable>, agentContext?: AgentContext): CredoRecord
 
   public async query(agentContext: AgentContext, query?: Query<CredoRecord>, queryOptions?: QueryOptions) {
     try {
@@ -179,7 +179,7 @@ export abstract class BaseDrizzleRecordAdapter<
         }
 
         return result.map(({ contextCorrelationId, ...item }) =>
-          this._toRecord(item as DrizzleAdapterRecordValues<PostgresTable>)
+          this._toRecord(item as DrizzleAdapterRecordValues<PostgresTable>, agentContext)
         )
       }
 
@@ -248,7 +248,7 @@ export abstract class BaseDrizzleRecordAdapter<
         }
 
         return result.map(({ contextCorrelationId, ...item }) =>
-          this._toRecord(item as DrizzleAdapterRecordValues<SQLiteTable>)
+          this._toRecord(item as DrizzleAdapterRecordValues<SQLiteTable>, agentContext)
         )
       }
     } catch (error) {
@@ -290,7 +290,7 @@ export abstract class BaseDrizzleRecordAdapter<
 
         // biome-ignore lint/correctness/noUnusedVariables: no explanation
         const { contextCorrelationId, ...item } = result
-        return this._toRecord(item as DrizzleAdapterRecordValues<SQLiteTable>)
+        return this._toRecord(item as DrizzleAdapterRecordValues<PostgresTable>, agentContext)
       }
 
       if (isDrizzleSqliteDatabase(this.database)) {
@@ -315,7 +315,7 @@ export abstract class BaseDrizzleRecordAdapter<
 
         // biome-ignore lint/correctness/noUnusedVariables: no explanation
         const { contextCorrelationId, ...item } = result
-        return this._toRecord(item as DrizzleAdapterRecordValues<SQLiteTable>)
+        return this._toRecord(item as DrizzleAdapterRecordValues<SQLiteTable>, agentContext)
       }
     } catch (error) {
       if (error instanceof CredoError) throw error

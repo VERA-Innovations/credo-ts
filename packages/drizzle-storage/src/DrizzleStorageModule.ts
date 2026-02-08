@@ -7,6 +7,7 @@ import { isDrizzlePostgresDatabase, isDrizzleSqliteDatabase } from './DrizzleDat
 import type { DrizzleStorageModuleConfigOptions } from './DrizzleStorageModuleConfig'
 import { DrizzleStorageModuleConfig } from './DrizzleStorageModuleConfig'
 import { CredoDrizzleStorageError } from './error'
+import { EncryptionKeyProvider } from './encryption/EncryptionKeyProvider'
 import { DrizzleStorageService } from './storage'
 
 export class DrizzleStorageModule implements Module {
@@ -18,6 +19,10 @@ export class DrizzleStorageModule implements Module {
 
   public register(dependencyManager: DependencyManager) {
     dependencyManager.registerInstance(DrizzleStorageModuleConfig, this.config)
+
+    // Registering the Provider with the module's encryption key
+    const encryptionKeyProvider = new EncryptionKeyProvider(this.config.encryptionKey)
+    dependencyManager.registerInstance(EncryptionKeyProvider, encryptionKeyProvider)
 
     if (dependencyManager.isRegistered(InjectionSymbols.StorageService)) {
       throw new CredoError(
@@ -43,6 +48,18 @@ export class DrizzleStorageModule implements Module {
       if (!(await storageUpdateService.hasStorageVersionRecord(agentContext))) {
         await this.createNewContextInDatabase(agentContext)
       }
+    }
+
+    // Also try to set the encryptionKey on the agent config if not already set
+    // (in case someone is checking agentContext.config directly)
+    try {
+      // biome-ignore lint/suspicious/noExplicitAny: writing to config which is any
+      const cfg = agentContext.config as any
+      if (this.config.encryptionKey && !cfg?.encryptionKey) {
+        cfg.encryptionKey = this.config.encryptionKey
+      }
+    } catch (err) {
+      // if we can't set it, don't fail initialization
     }
   }
 

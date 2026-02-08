@@ -12,8 +12,9 @@ export type DrizzlePostgresTestDatabase = {
   teardown: () => Promise<void>
   drizzleConnectionString: string
 }
+// TODO : 'persist' option is only till testing; can be removed later or kept if we want to keep it for debugging purposes
 
-export async function createDrizzlePostgresTestDatabase(): Promise<DrizzlePostgresTestDatabase> {
+export async function createDrizzlePostgresTestDatabase(persist: boolean = false): Promise<DrizzlePostgresTestDatabase> {
   const { Pool, Client } = await import('pg')
   const databaseName = utils.uuid().replace('-', '')
 
@@ -27,7 +28,12 @@ export async function createDrizzlePostgresTestDatabase(): Promise<DrizzlePostgr
   })
 
   await pgClient.connect()
+  console.log(`Creating test database '${databaseName}' for Drizzle Postgres tests...`)
   await pgClient.query(`CREATE DATABASE "${databaseName}";`)
+
+  if (persist) {
+    console.log(`\nDatabase persisted at: ${drizzleConnectionString}\n`)
+  }
 
   return {
     pool: drizzleClient,
@@ -35,15 +41,24 @@ export async function createDrizzlePostgresTestDatabase(): Promise<DrizzlePostgr
     drizzleConnectionString,
     teardown: async () => {
       await drizzleClient.end()
-      await pgClient.query(`DROP DATABASE "${databaseName}";`)
+      if (!persist) {
+        await pgClient.query(`DROP DATABASE "${databaseName}";`)
+      } else {
+        console.log(`\nDatabase '${databaseName}' persisted. Clean up manually with:`)
+      }
       await pgClient.end()
     },
   }
 }
 
 export type DrizzleRecordTest = Awaited<ReturnType<typeof setupDrizzleRecordTest>>
-export async function setupDrizzleRecordTest(databaseType: 'postgres' | 'sqlite', drizzleRecord: DrizzleRecord) {
-  const postgresDrizzle = databaseType === 'postgres' ? await createDrizzlePostgresTestDatabase() : undefined
+export async function setupDrizzleRecordTest(
+  databaseType: 'postgres' | 'sqlite',
+  drizzleRecord: DrizzleRecord,
+  persistDatabase: boolean = false
+) {
+  const postgresDrizzle =
+    databaseType === 'postgres' ? await createDrizzlePostgresTestDatabase(persistDatabase) : undefined
   const drizzle = postgresDrizzle ? postgresDrizzle.drizzle : await inMemoryDrizzleSqliteDatabase()
 
   const drizzleModule = new DrizzleStorageModule({
@@ -74,6 +89,7 @@ export async function setupDrizzleRecordTest(databaseType: 'postgres' | 'sqlite'
 
   return {
     agent,
+    drizzleConnectionString: postgresDrizzle?.drizzleConnectionString,
     teardown: async () => {
       await agent.shutdown()
       await postgresDrizzle?.teardown()
