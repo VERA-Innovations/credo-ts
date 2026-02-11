@@ -87,12 +87,8 @@
           "name": "didcommPrivateMediaSharing_fk_context",
           "tableFrom": "DidcommPrivateMediaSharing",
           "tableTo": "Context",
-          "columnsFrom": [
-            "context_correlation_id"
-          ],
-          "columnsTo": [
-            "context_correlation_id"
-          ],
+          "columnsFrom": ["context_correlation_id"],
+          "columnsTo": ["context_correlation_id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -100,20 +96,14 @@
       "compositePrimaryKeys": {
         "didcommPrivateMediaSharing_pk": {
           "name": "didcommPrivateMediaSharing_pk",
-          "columns": [
-            "context_correlation_id",
-            "id"
-          ]
+          "columns": ["context_correlation_id", "id"]
         }
       },
       "uniqueConstraints": {
         "DidcommPrivateMediaSharing_context_correlation_id_thread_id_unique": {
           "name": "DidcommPrivateMediaSharing_context_correlation_id_thread_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "context_correlation_id",
-            "thread_id"
-          ]
+          "columns": ["context_correlation_id", "thread_id"]
         }
       },
       "policies": {},

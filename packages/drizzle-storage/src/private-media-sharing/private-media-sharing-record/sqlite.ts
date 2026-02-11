@@ -33,4 +33,3 @@ export const didcommPrivateMediaSharing = sqliteTable(
     unique().on(table.contextCorrelationId, table.threadId),
   ]
 )
-

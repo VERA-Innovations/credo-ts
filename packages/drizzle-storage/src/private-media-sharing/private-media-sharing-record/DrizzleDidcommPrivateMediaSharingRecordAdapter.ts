@@ -1,13 +1,14 @@
-import { JsonTransformer, utils, type TagsBase } from '@credo-ts/core'
+import { JsonTransformer, type TagsBase, utils } from '@credo-ts/core'
 import { BaseDrizzleRecordAdapter, type DrizzleAdapterRecordValues } from '../../adapter'
 import type { DrizzleDatabase } from '../../DrizzleDatabase'
-import * as postgres from './postgres'
-import * as sqlite from './sqlite'
 import type { PrivateMediaItem } from '../PrivateMediaTypes'
 import { PrivateMediaRecord } from '../PrivateMediaTypes'
+import * as postgres from './postgres'
+import * as sqlite from './sqlite'
 
-type DrizzleDidcommPrivateMediaSharingAdapterValues =
-  DrizzleAdapterRecordValues<(typeof sqlite)['didcommPrivateMediaSharing']>
+type DrizzleDidcommPrivateMediaSharingAdapterValues = DrizzleAdapterRecordValues<
+  (typeof sqlite)['didcommPrivateMediaSharing']
+>
 
 export class DrizzleDidcommPrivateMediaSharingRecordAdapter extends BaseDrizzleRecordAdapter<
   PrivateMediaRecord,
@@ -25,13 +26,7 @@ export class DrizzleDidcommPrivateMediaSharingRecordAdapter extends BaseDrizzleR
   }
 
   public getValues(record: PrivateMediaRecord) {
-    const {
-      userId,
-      mediaType,
-      isPublic,
-      sharedWith,
-      ...customTags
-    } = record.getTags()
+    const { userId, mediaType, isPublic, sharedWith, ...customTags } = record.getTags()
 
     return {
       /** BaseRecord fields handled by BaseDrizzleRecordAdapter */
@@ -42,9 +37,7 @@ export class DrizzleDidcommPrivateMediaSharingRecordAdapter extends BaseDrizzleR
       threadId: record.threadId ?? utils.uuid(),
       parentThreadId: record.parentThreadId ?? null,
       description: record.description ?? null,
-      items: record.items
-        ? (JsonTransformer.toJSON(record.items) as PrivateMediaItem[])
-        : null,
+      items: record.items ? (JsonTransformer.toJSON(record.items) as PrivateMediaItem[]) : null,
       version: String(record.version ?? 1),
       customTags,
     }
