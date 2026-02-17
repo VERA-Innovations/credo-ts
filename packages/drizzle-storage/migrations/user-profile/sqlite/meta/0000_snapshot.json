@@ -91,22 +91,15 @@
           "name": "userProfile_fk_context",
           "tableFrom": "UserProfile",
           "tableTo": "Context",
-          "columnsFrom": [
-            "context_correlation_id"
-          ],
-          "columnsTo": [
-            "context_correlation_id"
-          ],
+          "columnsFrom": ["context_correlation_id"],
+          "columnsTo": ["context_correlation_id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
         "userProfile_pk": {
-          "columns": [
-            "context_correlation_id",
-            "id"
-          ],
+          "columns": ["context_correlation_id", "id"],
           "name": "userProfile_pk"
         }
       },

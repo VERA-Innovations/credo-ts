@@ -101,12 +101,8 @@
           "name": "didcommMediaSharing_fk_context",
           "tableFrom": "DidcommMediaSharing",
           "tableTo": "Context",
-          "columnsFrom": [
-            "context_correlation_id"
-          ],
-          "columnsTo": [
-            "context_correlation_id"
-          ],
+          "columnsFrom": ["context_correlation_id"],
+          "columnsTo": ["context_correlation_id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -114,14 +110,8 @@
           "name": "DidcommMediaSharing_connection_id_context_correlation_id_DidcommConnection_id_context_correlation_id_fk",
           "tableFrom": "DidcommMediaSharing",
           "tableTo": "DidcommConnection",
-          "columnsFrom": [
-            "connection_id",
-            "context_correlation_id"
-          ],
-          "columnsTo": [
-            "id",
-            "context_correlation_id"
-          ],
+          "columnsFrom": ["connection_id", "context_correlation_id"],
+          "columnsTo": ["id", "context_correlation_id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -129,20 +119,14 @@
       "compositePrimaryKeys": {
         "didcommMediaSharing_pk": {
           "name": "didcommMediaSharing_pk",
-          "columns": [
-            "context_correlation_id",
-            "id"
-          ]
+          "columns": ["context_correlation_id", "id"]
         }
       },
       "uniqueConstraints": {
         "DidcommMediaSharing_context_correlation_id_thread_id_unique": {
           "name": "DidcommMediaSharing_context_correlation_id_thread_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "context_correlation_id",
-            "thread_id"
-          ]
+          "columns": ["context_correlation_id", "thread_id"]
         }
       },
       "policies": {},
@@ -154,20 +138,12 @@
     "public.DidcommMediaSharingRole": {
       "name": "DidcommMediaSharingRole",
       "schema": "public",
-      "values": [
-        "sender",
-        "receiver"
-      ]
+      "values": ["sender", "receiver"]
     },
     "public.DidcommMediaSharingState": {
       "name": "DidcommMediaSharingState",
       "schema": "public",
-      "values": [
-        "init",
-        "media-requested",
-        "media-shared",
-        "done"
-      ]
+      "values": ["init", "media-requested", "media-shared", "done"]
     }
   },
   "schemas": {},
