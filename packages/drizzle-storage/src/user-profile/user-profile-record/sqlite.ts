@@ -19,7 +19,5 @@ export const userProfile = sqliteTable(
     displayPicture: text('display_picture', { mode: 'json' }).$type<Record<string, unknown> | undefined>(),
     displayIcon: text('display_icon', { mode: 'json' }).$type<Record<string, unknown> | undefined>(),
   },
-  (table) => [
-    ...sqliteBaseRecordIndexes(table, 'userProfile'),
-  ]
+  (table) => [...sqliteBaseRecordIndexes(table, 'userProfile')]
 )

@@ -6,6 +6,7 @@ import * as postgres from './postgres'
 import * as sqlite from './sqlite'
 
 type DrizzleDidcommConnectionAdapterValues = DrizzleAdapterRecordValues<(typeof sqlite)['didcommConnection']>
+
 export class DrizzleDidcommConnectionRecordAdapter extends BaseDrizzleRecordAdapter<
   DidCommConnectionRecord,
   typeof postgres.didcommConnection,

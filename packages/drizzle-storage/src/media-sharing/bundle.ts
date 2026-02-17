@@ -1,6 +1,6 @@
-import { didcommMediaSharingDrizzleRecord } from './media-sharing-record'
-import { bundleMigrationDefinition } from '../util'
 import type { DrizzleRecordBundle } from '../DrizzleRecord'
+import { bundleMigrationDefinition } from '../util'
+import { didcommMediaSharingDrizzleRecord } from './media-sharing-record'
 
 export const mediaSharingBundle = {
   name: 'media-sharing',

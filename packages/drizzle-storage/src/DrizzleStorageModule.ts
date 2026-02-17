@@ -6,8 +6,8 @@ import { context as sqliteContext } from './core/sqlite'
 import { isDrizzlePostgresDatabase, isDrizzleSqliteDatabase } from './DrizzleDatabase'
 import type { DrizzleStorageModuleConfigOptions } from './DrizzleStorageModuleConfig'
 import { DrizzleStorageModuleConfig } from './DrizzleStorageModuleConfig'
-import { CredoDrizzleStorageError } from './error'
 import { EncryptionKeyProvider } from './encryption/EncryptionKeyProvider'
+import { CredoDrizzleStorageError } from './error'
 import { DrizzleStorageService } from './storage'
 
 export class DrizzleStorageModule implements Module {
@@ -58,7 +58,7 @@ export class DrizzleStorageModule implements Module {
       if (this.config.encryptionKey && !cfg?.encryptionKey) {
         cfg.encryptionKey = this.config.encryptionKey
       }
-    } catch (err) {
+    } catch (_err) {
       // if we can't set it, don't fail initialization
     }
   }

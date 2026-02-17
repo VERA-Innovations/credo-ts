@@ -15,9 +15,6 @@ export const userProfile = pgTable(
 
     displayPicture: jsonb('display_picture').$type<Record<string, unknown> | undefined>(),
     displayIcon: jsonb('display_icon').$type<Record<string, unknown> | undefined>(),
-
   },
-  (table) => [
-    ...postgresBaseRecordIndexes(table, 'userProfile'),
-  ]
+  (table) => [...postgresBaseRecordIndexes(table, 'userProfile')]
 )

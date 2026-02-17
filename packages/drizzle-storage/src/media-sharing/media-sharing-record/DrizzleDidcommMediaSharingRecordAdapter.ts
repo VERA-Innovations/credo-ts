@@ -1,5 +1,5 @@
 import { DidCommMediaSharingRecord, SharedMediaItem } from '@2060.io/credo-ts-didcomm-media-sharing'
-import { JsonTransformer, utils, type TagsBase } from '@credo-ts/core'
+import { JsonTransformer, type TagsBase, utils } from '@credo-ts/core'
 import { BaseDrizzleRecordAdapter, type DrizzleAdapterRecordValues } from '../../adapter'
 import type { DrizzleDatabase } from '../../DrizzleDatabase'
 import * as postgres from './postgres'

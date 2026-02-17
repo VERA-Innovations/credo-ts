@@ -1,6 +1,6 @@
-import { userProfileDrizzleRecord } from './user-profile-record'
-import { bundleMigrationDefinition } from '../util'
 import type { DrizzleRecordBundle } from '../DrizzleRecord'
+import { bundleMigrationDefinition } from '../util'
+import { userProfileDrizzleRecord } from './user-profile-record'
 
 export const userProfileBundle = {
   name: 'user-profile',
