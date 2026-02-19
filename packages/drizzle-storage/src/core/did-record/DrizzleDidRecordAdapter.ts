@@ -1,10 +1,12 @@
-import { DidRecord, JsonTransformer } from '@credo-ts/core'
-
-import { BaseDrizzleRecordAdapter, type DrizzleAdapterRecordValues } from '../../adapter/BaseDrizzleRecordAdapter'
+import { AgentContext, DidRecord, JsonTransformer } from '@credo-ts/core'
+import { BaseDrizzleRecordAdapter } from '../../adapter/BaseDrizzleRecordAdapter'
+console.log('Base Class Check:', BaseDrizzleRecordAdapter);
 
 import type { DrizzleDatabase } from '../../DrizzleDatabase'
 import * as postgres from './postgres'
 import * as sqlite from './sqlite'
+import type { DrizzleAdapterRecordValues } from '../../adapter/type';
+import type { DrizzleStorageModuleConfig } from '../../DrizzleStorageModuleConfig';
 
 type DrizzleDidAdapterValues = DrizzleAdapterRecordValues<(typeof sqlite)['did']>
 export class DrizzleDidRecordAdapter extends BaseDrizzleRecordAdapter<
@@ -14,11 +16,11 @@ export class DrizzleDidRecordAdapter extends BaseDrizzleRecordAdapter<
   typeof sqlite.did,
   typeof sqlite
 > {
-  public constructor(database: DrizzleDatabase<typeof postgres, typeof sqlite>) {
-    super(database, { postgres: postgres.did, sqlite: sqlite.did }, DidRecord)
+  public constructor(database: DrizzleDatabase<typeof postgres, typeof sqlite>, public config: DrizzleStorageModuleConfig) {
+    super(database, { postgres: postgres.did, sqlite: sqlite.did }, DidRecord, [], config)
   }
 
-  public getValues(record: DidRecord) {
+  public getValues(record: DidRecord, agentContext?: AgentContext) {
     const {
       // Default Tags
       recipientKeyFingerprints,
@@ -49,7 +51,7 @@ export class DrizzleDidRecordAdapter extends BaseDrizzleRecordAdapter<
     }
   }
 
-  public toRecord(values: DrizzleDidAdapterValues): DidRecord {
+  public toRecord(values: DrizzleDidAdapterValues, agentContext?: AgentContext): DidRecord {
     const {
       // Default Tags
       recipientKeyFingerprints,

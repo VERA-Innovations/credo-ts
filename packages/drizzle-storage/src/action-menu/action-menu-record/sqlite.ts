@@ -19,8 +19,8 @@ export const didcommActionMenu = sqliteTable(
     connectionId: text('connection_id').notNull(),
     threadId: text('thread_id').notNull(),
 
-    menu: text('menu', { mode: 'json' }).$type<ActionMenuOptions>(),
-    performedAction: text('performed_action', { mode: 'json' }).$type<ActionMenuSelectionOptions>(),
+    menu: text('menu'),
+    performedAction: text('performed_action'),
   },
   (table) => [
     ...sqliteBaseRecordIndexes(table, 'didcommActionMenu'),

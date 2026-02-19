@@ -14,7 +14,9 @@ export type DrizzlePostgresTestDatabase = {
 }
 // TODO : 'persist' option is only till testing; can be removed later or kept if we want to keep it for debugging purposes
 
-export async function createDrizzlePostgresTestDatabase(persist: boolean = false): Promise<DrizzlePostgresTestDatabase> {
+export async function createDrizzlePostgresTestDatabase(
+  persist: boolean = false
+): Promise<DrizzlePostgresTestDatabase> {
   const { Pool, Client } = await import('pg')
   const databaseName = utils.uuid().replace('-', '')
 
@@ -28,11 +30,9 @@ export async function createDrizzlePostgresTestDatabase(persist: boolean = false
   })
 
   await pgClient.connect()
-  console.log(`Creating test database '${databaseName}' for Drizzle Postgres tests...`)
   await pgClient.query(`CREATE DATABASE "${databaseName}";`)
 
   if (persist) {
-    console.log(`\nDatabase persisted at: ${drizzleConnectionString}\n`)
   }
 
   return {
@@ -44,7 +44,6 @@ export async function createDrizzlePostgresTestDatabase(persist: boolean = false
       if (!persist) {
         await pgClient.query(`DROP DATABASE "${databaseName}";`)
       } else {
-        console.log(`\nDatabase '${databaseName}' persisted. Clean up manually with:`)
       }
       await pgClient.end()
     },

@@ -1,4 +1,4 @@
-import type { AnyDrizzleAdapter } from './adapter/BaseDrizzleRecordAdapter'
+import type { AnyDrizzleAdapter } from './adapter/type'
 import { getSchemaFromDrizzleRecords } from './combineSchemas'
 import { coreBundle } from './core/bundle'
 import { type DrizzleDatabase, getDrizzleDatabaseType } from './DrizzleDatabase'
@@ -28,7 +28,12 @@ export interface DrizzleStorageModuleConfigOptions<Database extends AnyDrizzleDa
    * sqlite and postgres definition, as well as an adapter.
    */
   bundles: DrizzleRecordBundle[]
-  
+
+  /**
+   * Whether encryption is enabled for the storage module
+   */
+  enableEncryption?: boolean
+
   /**
    * Encryption key for at-rest encryption of configured columns
    */
@@ -50,11 +55,13 @@ export class DrizzleStorageModuleConfig {
   public readonly schemas: Record<string, unknown>
   public readonly encryptionKey?: string
   public readonly encryptedColumns: EncryptedColumnsConfig
+  public readonly enableEncryption: boolean
 
   public constructor(options: DrizzleStorageModuleConfigOptions) {
     this.database = options.database
     this.encryptionKey = options.encryptionKey
     this.encryptedColumns = options.encryptedColumns ?? {}
+    this.enableEncryption = options.enableEncryption ?? false
 
     // core MUST always be registered
     const allRecords: DrizzleRecord[] = Array.from(

@@ -1,9 +1,11 @@
 import { JsonTransformer, type TagsBase } from '@credo-ts/core'
 import { DrpcRecord } from '@credo-ts/drpc'
-import { BaseDrizzleRecordAdapter, type DrizzleAdapterRecordValues } from '../../adapter/BaseDrizzleRecordAdapter'
+import { BaseDrizzleRecordAdapter } from '../../adapter/BaseDrizzleRecordAdapter'
 import type { DrizzleDatabase } from '../../DrizzleDatabase'
 import * as postgres from './postgres'
 import * as sqlite from './sqlite'
+import type { DrizzleAdapterRecordValues } from '../../adapter/type'
+import type { DrizzleStorageModuleConfig } from '../../DrizzleStorageModuleConfig'
 
 type DrizzleDidcommDrpcAdapterValues = DrizzleAdapterRecordValues<(typeof sqlite)['didcommDrpc']>
 export class DrizzleDidcommDrpcRecordAdapter extends BaseDrizzleRecordAdapter<
@@ -13,8 +15,8 @@ export class DrizzleDidcommDrpcRecordAdapter extends BaseDrizzleRecordAdapter<
   typeof sqlite.didcommDrpc,
   typeof sqlite
 > {
-  public constructor(database: DrizzleDatabase<typeof postgres, typeof sqlite>) {
-    super(database, { postgres: postgres.didcommDrpc, sqlite: sqlite.didcommDrpc }, DrpcRecord)
+  public constructor(database: DrizzleDatabase<typeof postgres, typeof sqlite>, public config: DrizzleStorageModuleConfig) {
+    super(database, { postgres: postgres.didcommDrpc, sqlite: sqlite.didcommDrpc }, DrpcRecord, [], config)
   }
 
   public getValues(record: DrpcRecord) {

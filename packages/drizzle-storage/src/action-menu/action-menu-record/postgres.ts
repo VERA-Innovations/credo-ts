@@ -29,8 +29,8 @@ export const didcommActionMenu = pgTable(
     connectionId: text('connection_id').notNull(),
     threadId: text('thread_id').notNull(),
 
-    menu: jsonb('menu').$type<ActionMenuOptions>(),
-    performedAction: jsonb('performed_action').$type<ActionMenuSelectionOptions>(),
+    menu: text('menu'),
+    performedAction: text('performed_action'),
   },
   (table) => [
     ...postgresBaseRecordIndexes(table, 'didcommActionMenu'),

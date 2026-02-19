@@ -1,13 +1,13 @@
 import { JsonTransformer } from '@credo-ts/core'
 import { DidCommOutOfBandRecord } from '@credo-ts/didcomm'
 import {
-  BaseDrizzleRecordAdapter,
-  type DrizzleAdapterRecordValues,
-  type DrizzleAdapterValues,
+  BaseDrizzleRecordAdapter
 } from '../../adapter/BaseDrizzleRecordAdapter'
 import type { DrizzleDatabase } from '../../DrizzleDatabase'
 import * as postgres from './postgres'
 import * as sqlite from './sqlite'
+import type { DrizzleAdapterRecordValues, DrizzleAdapterValues } from '../../adapter/type'
+import type { DrizzleStorageModuleConfig } from '../../DrizzleStorageModuleConfig'
 
 type DrizzleDidcommOutOfBandAdapterValues = DrizzleAdapterRecordValues<(typeof sqlite)['didcommOutOfBand']>
 export class DrizzleDidcommOutOfBandRecordAdapter extends BaseDrizzleRecordAdapter<
@@ -17,8 +17,8 @@ export class DrizzleDidcommOutOfBandRecordAdapter extends BaseDrizzleRecordAdapt
   typeof sqlite.didcommOutOfBand,
   typeof sqlite
 > {
-  public constructor(database: DrizzleDatabase<typeof postgres, typeof sqlite>) {
-    super(database, { postgres: postgres.didcommOutOfBand, sqlite: sqlite.didcommOutOfBand }, DidCommOutOfBandRecord)
+  public constructor(database: DrizzleDatabase<typeof postgres, typeof sqlite>, public config: DrizzleStorageModuleConfig) {
+    super(database, { postgres: postgres.didcommOutOfBand, sqlite: sqlite.didcommOutOfBand }, DidCommOutOfBandRecord, [], config)
   }
 
   public tagKeyMapping = {

@@ -1,10 +1,12 @@
 // Adapter
-export {
-  type AnyDrizzleAdapter,
-  BaseDrizzleRecordAdapter,
-  type DrizzleAdapterRecordValues,
-  type DrizzleAdapterValues,
+export type {
+  AnyDrizzleAdapter,
+  DrizzleAdapterRecordValues,
+  DrizzleAdapterValues,
 } from './adapter'
+export {
+  BaseDrizzleRecordAdapter
+} from './adapter/BaseDrizzleRecordAdapter'
 export {
   applyReactNativeMigrations,
   type ReactNativeDrizzleMigration,

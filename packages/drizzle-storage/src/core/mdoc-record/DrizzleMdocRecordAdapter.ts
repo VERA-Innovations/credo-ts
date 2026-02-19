@@ -1,10 +1,12 @@
 import { JsonTransformer, MdocRecord } from '@credo-ts/core'
 
-import { BaseDrizzleRecordAdapter, type DrizzleAdapterRecordValues } from '../../adapter/BaseDrizzleRecordAdapter'
+import { BaseDrizzleRecordAdapter } from '../../adapter/BaseDrizzleRecordAdapter'
 
 import type { DrizzleDatabase } from '../../DrizzleDatabase'
 import * as postgres from './postgres'
 import * as sqlite from './sqlite'
+import type { DrizzleStorageModuleConfig } from '../../DrizzleStorageModuleConfig'
+import type { DrizzleAdapterRecordValues } from '../../adapter/type'
 
 type DrizzleMdocAdapterValues = DrizzleAdapterRecordValues<(typeof sqlite)['mdoc']>
 export class DrizzleMdocRecordAdapter extends BaseDrizzleRecordAdapter<
@@ -14,8 +16,8 @@ export class DrizzleMdocRecordAdapter extends BaseDrizzleRecordAdapter<
   typeof sqlite.mdoc,
   typeof sqlite
 > {
-  public constructor(database: DrizzleDatabase<typeof postgres, typeof sqlite>) {
-    super(database, { postgres: postgres.mdoc, sqlite: sqlite.mdoc }, MdocRecord)
+  public constructor(database: DrizzleDatabase<typeof postgres, typeof sqlite>, public config: DrizzleStorageModuleConfig) {
+    super(database, { postgres: postgres.mdoc, sqlite: sqlite.mdoc }, MdocRecord, [], config)
   }
 
   public getValues(record: MdocRecord) {

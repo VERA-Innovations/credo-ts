@@ -1,10 +1,12 @@
 import { JsonTransformer, W3cCredentialRecord } from '@credo-ts/core'
 
-import { BaseDrizzleRecordAdapter, type DrizzleAdapterRecordValues } from '../../adapter/BaseDrizzleRecordAdapter'
+import { BaseDrizzleRecordAdapter } from '../../adapter/BaseDrizzleRecordAdapter'
 
 import type { DrizzleDatabase } from '../../DrizzleDatabase'
 import * as postgres from './postgres'
 import * as sqlite from './sqlite'
+import type { DrizzleAdapterRecordValues } from '../../adapter/type'
+import type { DrizzleStorageModuleConfig } from '../../DrizzleStorageModuleConfig'
 
 type DrizzleW3cCredentialAdapterValues = DrizzleAdapterRecordValues<(typeof sqlite)['w3cCredential']>
 export class DrizzleW3cCredentialRecordAdapter extends BaseDrizzleRecordAdapter<
@@ -14,8 +16,8 @@ export class DrizzleW3cCredentialRecordAdapter extends BaseDrizzleRecordAdapter<
   typeof sqlite.w3cCredential,
   typeof sqlite
 > {
-  public constructor(database: DrizzleDatabase<typeof postgres, typeof sqlite>) {
-    super(database, { postgres: postgres.w3cCredential, sqlite: sqlite.w3cCredential }, W3cCredentialRecord)
+  public constructor(database: DrizzleDatabase<typeof postgres, typeof sqlite>, public config: DrizzleStorageModuleConfig) {
+    super(database, { postgres: postgres.w3cCredential, sqlite: sqlite.w3cCredential }, W3cCredentialRecord, [], config)
   }
 
   public getValues(record: W3cCredentialRecord) {

@@ -1,10 +1,12 @@
 import { JsonTransformer, type TagsBase } from '@credo-ts/core'
 
 import { OpenId4VcVerifierRecord } from '@credo-ts/openid4vc'
-import { BaseDrizzleRecordAdapter, type DrizzleAdapterRecordValues } from '../../adapter/BaseDrizzleRecordAdapter'
+import { BaseDrizzleRecordAdapter } from '../../adapter/BaseDrizzleRecordAdapter'
 import type { DrizzleDatabase } from '../../DrizzleDatabase'
 import * as postgres from './postgres'
 import * as sqlite from './sqlite'
+import type { DrizzleAdapterRecordValues } from '../../adapter/type'
+import type { DrizzleStorageModuleConfig } from '../../DrizzleStorageModuleConfig'
 
 type DrizzleOpenid4vcVerifierAdapterValues = DrizzleAdapterRecordValues<(typeof sqlite)['openid4vcVerifier']>
 export class DrizzleOpenid4vcVerifierRecordAdapter extends BaseDrizzleRecordAdapter<
@@ -14,8 +16,8 @@ export class DrizzleOpenid4vcVerifierRecordAdapter extends BaseDrizzleRecordAdap
   typeof sqlite.openid4vcVerifier,
   typeof sqlite
 > {
-  public constructor(database: DrizzleDatabase<typeof postgres, typeof sqlite>) {
-    super(database, { postgres: postgres.openid4vcVerifier, sqlite: sqlite.openid4vcVerifier }, OpenId4VcVerifierRecord)
+  public constructor(database: DrizzleDatabase<typeof postgres, typeof sqlite>, public config: DrizzleStorageModuleConfig) {
+    super(database, { postgres: postgres.openid4vcVerifier, sqlite: sqlite.openid4vcVerifier }, OpenId4VcVerifierRecord, [], config)
   }
 
   public getValues(record: OpenId4VcVerifierRecord) {

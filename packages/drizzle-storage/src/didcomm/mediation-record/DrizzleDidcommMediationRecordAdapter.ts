@@ -2,12 +2,12 @@ import { JsonTransformer } from '@credo-ts/core'
 import { DidCommMediationRecord } from '@credo-ts/didcomm'
 import {
   BaseDrizzleRecordAdapter,
-  type DrizzleAdapterRecordValues,
-  type DrizzleAdapterValues,
 } from '../../adapter/BaseDrizzleRecordAdapter'
 import type { DrizzleDatabase } from '../../DrizzleDatabase'
 import * as postgres from './postgres'
 import * as sqlite from './sqlite'
+import type { DrizzleAdapterRecordValues, DrizzleAdapterValues } from '../../adapter/type'
+import type { DrizzleStorageModuleConfig } from '../../DrizzleStorageModuleConfig'
 
 type DrizzleDidcommMediationAdapterValues = DrizzleAdapterRecordValues<(typeof sqlite)['didcommMediation']>
 export class DrizzleDidcommMediationRecordAdapter extends BaseDrizzleRecordAdapter<
@@ -17,8 +17,8 @@ export class DrizzleDidcommMediationRecordAdapter extends BaseDrizzleRecordAdapt
   typeof sqlite.didcommMediation,
   typeof sqlite
 > {
-  public constructor(database: DrizzleDatabase<typeof postgres, typeof sqlite>) {
-    super(database, { postgres: postgres.didcommMediation, sqlite: sqlite.didcommMediation }, DidCommMediationRecord)
+  public constructor(database: DrizzleDatabase<typeof postgres, typeof sqlite>, public config: DrizzleStorageModuleConfig) {
+    super(database, { postgres: postgres.didcommMediation, sqlite: sqlite.didcommMediation }, DidCommMediationRecord, [], config)
   }
 
   public getValues(record: DidCommMediationRecord): DrizzleAdapterValues<(typeof sqlite)['didcommMediation']> {

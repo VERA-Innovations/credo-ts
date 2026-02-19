@@ -1,10 +1,9 @@
+import { Buffer } from '@credo-ts/core'
 import crypto from 'crypto'
-import { AgentContext } from '@credo-ts/core'
-import { EncryptionKeyProvider } from '../../encryption/EncryptionKeyProvider'
-import { DrizzleStorageModuleConfig } from '../../DrizzleStorageModuleConfig'
-import sodium from 'libsodium-wrappers'
 import type { SQL } from 'drizzle-orm'
-import { sql, customType } from 'drizzle-orm'
+import { sql } from 'drizzle-orm'
+import { customType } from 'drizzle-orm/gel-core'
+// import { EncryptionKeyProvider } from '../../encryption/EncryptionKeyProvider'
 
 const ALGORITHM = 'aes-256-gcm'
 
@@ -125,33 +124,35 @@ export function decryptDataWithKey(encryptedData: string, encryptionKey: string)
  * @param agentContext - The agent context
  * @returns Encryption key string from config
  */
-export function getEncryptionKeyFromAgentContext(agentContext: AgentContext): string {
-  const cfg = (agentContext.config as any) || {}
+// export function getEncryptionKeyFromAgentContext(agentContext: AgentContext): string {
+//   // Hint: Currently there's no need to store/get the encryption key from agent context
+//   // const cfg = (agentContext.config as any) || {}
 
-  // 1. Prefer explicit agent config value
-  if (cfg.encryptionKey) return cfg.encryptionKey
+//   // // 1. Prefer explicit agent config value
+//   // if (cfg.encryptionKey) return cfg.encryptionKey
 
-  // 2. Try to resolve EncryptionKeyProvider (registered by DrizzleStorageModule)
-  try {
-    const provider = agentContext.resolve(EncryptionKeyProvider)
-    const key = provider.getEncryptionKey()
-    if (key) return key
-  } catch (err) {
-    // TODO : Nothing - provider may not be registered OR Handle better
-  }
+//   // // 2. Try to resolve EncryptionKeyProvider (registered by DrizzleStorageModule)
+//   // try {
+//   //   const provider = agentContext.resolve(EncryptionKeyProvider)
+//   //   const key = provider.getEncryptionKey()
+//   //   if (key) return key
+//   // } catch (_err) {
+//   //   // TODO : Nothing - provider may not be registered OR Handle better
+//   // }
 
-  // 3. Fallback: if the drizzle module registered a config with an encryptionKey, use that
-  try {
-    const moduleCfg = agentContext.resolve(DrizzleStorageModuleConfig)
-    if (moduleCfg && (moduleCfg as any).encryptionKey) return (moduleCfg as any).encryptionKey
-  } catch (err) {
-    // TODO : Nothing  - module config may not be registered in this context OR Handle better
-  }
+//   // 3. Fallback: if the drizzle module registered a config with an encryptionKey, use that
+//   try {
+//     const moduleCfg = agentContext.resolve(DrizzleStorageModuleConfig)
+//     if (moduleCfg?.encryptionKey) return moduleCfg.encryptionKey
+//   } catch (_err) {
+//     console.log("_err", _err)
+//     // TODO : Nothing  - module config may not be registered in this context OR Handle better
+//   }
 
-  throw new Error(
-    'Encryption key not found. Set `encryptionKey` in AgentConfig or provide it via DrizzleStorageModule config.'
-  )
-}
+//   throw new Error(
+//     'Encryption key not found. Set `encryptionKey` in AgentConfig or provide it via DrizzleStorageModule config.'
+//   )
+// }
 
 // ============================================================================
 // Drizzle Custom Types for Encrypted Columns
@@ -197,20 +198,20 @@ function dataToString<T extends EncryptableColumnType>(data: ColumnTypeMap[T], c
 function stringToData<T extends EncryptableColumnType>(str: string, columnType: T): ColumnTypeMap[T] {
   switch (columnType) {
     case 'integer':
-      return parseInt(str, 10) as ColumnTypeMap[T];
+      return parseInt(str, 10) as ColumnTypeMap[T]
     case 'number':
-      return parseFloat(str) as ColumnTypeMap[T];
+      return parseFloat(str) as ColumnTypeMap[T]
     case 'boolean':
-      return (str === 'true') as ColumnTypeMap[T];
+      return (str === 'true') as ColumnTypeMap[T]
     case 'text':
     case 'varchar':
-      return str as ColumnTypeMap[T];
+      return str as ColumnTypeMap[T]
     case 'json':
-      return JSON.parse(str) as ColumnTypeMap[T];
+      return JSON.parse(str) as ColumnTypeMap[T]
     case 'date':
-      return new Date(str) as ColumnTypeMap[T];
+      return new Date(str) as ColumnTypeMap[T]
     default:
-      return str as ColumnTypeMap[T];
+      return str as ColumnTypeMap[T]
   }
 }
 
@@ -235,7 +236,7 @@ export function encryptedColumn<T extends EncryptableColumnType>(
     fromDriver(encryptedValue: string): ColumnTypeMap[T] {
       try {
         if (!encryptedValue) {
-          return (null as unknown) as ColumnTypeMap[T]
+          return null as unknown as ColumnTypeMap[T]
         }
         const decryptedString = decryptDataWithKey(encryptedValue, encryptionKey)
         return stringToData(decryptedString, columnType)
@@ -273,13 +274,13 @@ export function encryptedColumn<T extends EncryptableColumnType>(
  * @param record - The data to encrypt
  * @returns Encrypted data as base64 string
  */
-export async function encryptBasicMessageContent(agentContext: AgentContext, record: string): Promise<string> {
-  const content = record
-  if (!content) return record
+// export async function encryptBasicMessageContent(agentContext: AgentContext, record: string): Promise<string> {
+//   const content = record
+//   if (!content) return record
 
-  const encryptionKey = getEncryptionKeyFromAgentContext(agentContext)
-  return encryptDataWithKey(content, encryptionKey)
-}
+//   const encryptionKey = encryptionKey
+//   return encryptDataWithKey(content, encryptionKey)
+// }
 
 /**
  * Decrypts content using key from AgentContext
@@ -287,10 +288,10 @@ export async function encryptBasicMessageContent(agentContext: AgentContext, rec
  * @param record - The encrypted data
  * @returns Decrypted plaintext
  */
-export async function decryptBasicMessageContent(agentContext: AgentContext, record: string): Promise<string> {
-  const encrypted = record
-  if (!encrypted) return record
+// export async function decryptBasicMessageContent(agentContext: AgentContext, record: string): Promise<string> {
+//   const encrypted = record
+//   if (!encrypted) return record
 
-  const encryptionKey = getEncryptionKeyFromAgentContext(agentContext)
-  return decryptDataWithKey(encrypted, encryptionKey)
-}
+//   const encryptionKey = getEncryptionKeyFromAgentContext(agentContext)
+//   return decryptDataWithKey(encrypted, encryptionKey)
+// }
