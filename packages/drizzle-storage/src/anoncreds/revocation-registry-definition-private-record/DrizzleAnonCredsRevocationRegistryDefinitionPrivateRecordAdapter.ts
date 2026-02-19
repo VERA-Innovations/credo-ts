@@ -1,9 +1,11 @@
 import { AnonCredsRevocationRegistryDefinitionPrivateRecord } from '@credo-ts/anoncreds'
 import { JsonTransformer, type TagsBase } from '@credo-ts/core'
-import { BaseDrizzleRecordAdapter, type DrizzleAdapterRecordValues } from '../../adapter/BaseDrizzleRecordAdapter'
+import { BaseDrizzleRecordAdapter } from '../../adapter/BaseDrizzleRecordAdapter'
 import type { DrizzleDatabase } from '../../DrizzleDatabase'
 import * as postgres from './postgres'
 import * as sqlite from './sqlite'
+import type { DrizzleAdapterRecordValues } from '../../adapter/type'
+import type { DrizzleStorageModuleConfig } from '../../DrizzleStorageModuleConfig'
 
 type DrizzleAnonCredsRevocationRegistryDefinitionPrivateAdapterValues = DrizzleAdapterRecordValues<
   (typeof sqlite)['anonCredsRevocationRegistryDefinitionPrivate']
@@ -15,14 +17,16 @@ export class DrizzleAnonCredsRevocationRegistryDefinitionPrivateRecordAdapter ex
   typeof sqlite.anonCredsRevocationRegistryDefinitionPrivate,
   typeof sqlite
 > {
-  public constructor(database: DrizzleDatabase<typeof postgres, typeof sqlite>) {
+  public constructor(database: DrizzleDatabase<typeof postgres, typeof sqlite>, public config: DrizzleStorageModuleConfig ) {
     super(
       database,
       {
         postgres: postgres.anonCredsRevocationRegistryDefinitionPrivate,
         sqlite: sqlite.anonCredsRevocationRegistryDefinitionPrivate,
       },
-      AnonCredsRevocationRegistryDefinitionPrivateRecord
+      AnonCredsRevocationRegistryDefinitionPrivateRecord,
+      [],
+      config
     )
   }
 

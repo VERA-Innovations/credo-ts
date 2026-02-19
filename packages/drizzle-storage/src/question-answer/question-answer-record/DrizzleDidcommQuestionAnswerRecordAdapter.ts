@@ -1,10 +1,12 @@
 import { JsonTransformer, type TagsBase } from '@credo-ts/core'
 
 import { QuestionAnswerRecord } from '@credo-ts/question-answer'
-import { BaseDrizzleRecordAdapter, type DrizzleAdapterRecordValues } from '../../adapter/BaseDrizzleRecordAdapter'
+import { BaseDrizzleRecordAdapter } from '../../adapter/BaseDrizzleRecordAdapter'
 import type { DrizzleDatabase } from '../../DrizzleDatabase'
 import * as postgres from './postgres'
 import * as sqlite from './sqlite'
+import type { DrizzleAdapterRecordValues } from '../../adapter/type'
+import type { DrizzleStorageModuleConfig } from '../../DrizzleStorageModuleConfig'
 
 type DrizzleDidcommQuestionAnswerAdapterValues = DrizzleAdapterRecordValues<(typeof sqlite)['didcommQuestionAnswer']>
 export class DrizzleDidcommQuestionAnswerRecordAdapter extends BaseDrizzleRecordAdapter<
@@ -14,11 +16,13 @@ export class DrizzleDidcommQuestionAnswerRecordAdapter extends BaseDrizzleRecord
   typeof sqlite.didcommQuestionAnswer,
   typeof sqlite
 > {
-  public constructor(database: DrizzleDatabase<typeof postgres, typeof sqlite>) {
+  public constructor(database: DrizzleDatabase<typeof postgres, typeof sqlite>, public config: DrizzleStorageModuleConfig) {
     super(
       database,
       { postgres: postgres.didcommQuestionAnswer, sqlite: sqlite.didcommQuestionAnswer },
-      QuestionAnswerRecord
+      QuestionAnswerRecord,
+      [],
+      config
     )
   }
 

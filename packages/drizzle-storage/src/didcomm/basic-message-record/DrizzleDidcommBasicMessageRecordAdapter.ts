@@ -2,12 +2,12 @@ import { JsonTransformer, type TagsBase } from '@credo-ts/core'
 import { DidCommBasicMessageRecord } from '@credo-ts/didcomm'
 import {
   BaseDrizzleRecordAdapter,
-  type DrizzleAdapterRecordValues,
-  type DrizzleAdapterValues,
 } from '../../adapter/BaseDrizzleRecordAdapter'
 import type { DrizzleDatabase } from '../../DrizzleDatabase'
 import * as postgres from './postgres'
 import * as sqlite from './sqlite'
+import type { DrizzleAdapterRecordValues, DrizzleAdapterValues } from '../../adapter/type'
+import type { DrizzleStorageModuleConfig } from '../../DrizzleStorageModuleConfig'
 
 type DrizzleDidcommBasicMessageAdapterValues = DrizzleAdapterRecordValues<(typeof sqlite)['didcommBasicMessage']>
 export class DrizzleDidcommBasicMessageRecordAdapter extends BaseDrizzleRecordAdapter<
@@ -17,11 +17,13 @@ export class DrizzleDidcommBasicMessageRecordAdapter extends BaseDrizzleRecordAd
   typeof sqlite.didcommBasicMessage,
   typeof sqlite
 > {
-  public constructor(database: DrizzleDatabase<typeof postgres, typeof sqlite>) {
+  public constructor(database: DrizzleDatabase<typeof postgres, typeof sqlite>, public config: DrizzleStorageModuleConfig) {
     super(
       database,
       { postgres: postgres.didcommBasicMessage, sqlite: sqlite.didcommBasicMessage },
-      DidCommBasicMessageRecord
+      DidCommBasicMessageRecord,
+      [],
+      config
     )
   }
 

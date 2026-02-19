@@ -1,13 +1,13 @@
 import { type JsonObject, JsonTransformer, type TagsBase } from '@credo-ts/core'
 import { DidCommCredentialExchangeRecord } from '@credo-ts/didcomm'
 import {
-  BaseDrizzleRecordAdapter,
-  type DrizzleAdapterRecordValues,
-  type DrizzleAdapterValues,
+  BaseDrizzleRecordAdapter
 } from '../../adapter/BaseDrizzleRecordAdapter'
 import type { DrizzleDatabase } from '../../DrizzleDatabase'
 import * as postgres from './postgres'
 import * as sqlite from './sqlite'
+import type { DrizzleAdapterRecordValues, DrizzleAdapterValues } from '../../adapter'
+import type { DrizzleStorageModuleConfig } from '../../DrizzleStorageModuleConfig'
 
 type DrizzleDidcommCredentialExchangeAdapterValues = DrizzleAdapterRecordValues<
   (typeof sqlite)['didcommCredentialExchange']
@@ -19,11 +19,13 @@ export class DrizzleDidcommCredentialExchangeRecordAdapter extends BaseDrizzleRe
   typeof sqlite.didcommCredentialExchange,
   typeof sqlite
 > {
-  public constructor(database: DrizzleDatabase<typeof postgres, typeof sqlite>) {
+  public constructor(database: DrizzleDatabase<typeof postgres, typeof sqlite>, public config: DrizzleStorageModuleConfig) {
     super(
       database,
       { postgres: postgres.didcommCredentialExchange, sqlite: sqlite.didcommCredentialExchange },
-      DidCommCredentialExchangeRecord
+      DidCommCredentialExchangeRecord,
+      [],
+      config
     )
   }
 

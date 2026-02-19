@@ -5,6 +5,7 @@ import type { DrizzleDatabase } from '../../DrizzleDatabase'
 import * as postgres from './postgres'
 import * as sqlite from './sqlite'
 import { BaseDrizzleRecordAdapter } from '../../adapter/BaseDrizzleRecordAdapter'
+import type { DrizzleStorageModuleConfig } from '../../DrizzleStorageModuleConfig'
 
 type DrizzleDidcommMediaSharingAdapterValues = DrizzleAdapterRecordValues<(typeof sqlite)['didcommMediaSharing']>
 
@@ -15,11 +16,13 @@ export class DrizzleDidcommMediaSharingRecordAdapter extends BaseDrizzleRecordAd
   typeof sqlite.didcommMediaSharing,
   typeof sqlite
 > {
-  public constructor(database: DrizzleDatabase<typeof postgres, typeof sqlite>) {
+  public constructor(database: DrizzleDatabase<typeof postgres, typeof sqlite>, public config: DrizzleStorageModuleConfig) {
     super(
       database,
       { postgres: postgres.didcommMediaSharing, sqlite: sqlite.didcommMediaSharing },
-      DidCommMediaSharingRecord
+      DidCommMediaSharingRecord,
+      [],
+      config
     )
   }
 
