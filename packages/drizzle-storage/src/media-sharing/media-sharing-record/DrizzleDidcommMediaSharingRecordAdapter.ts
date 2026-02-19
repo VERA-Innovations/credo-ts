@@ -1,9 +1,10 @@
 import { DidCommMediaSharingRecord, SharedMediaItem } from '@2060.io/credo-ts-didcomm-media-sharing'
 import { JsonTransformer, type TagsBase, utils } from '@credo-ts/core'
-import { BaseDrizzleRecordAdapter, type DrizzleAdapterRecordValues } from '../../adapter'
+import { type DrizzleAdapterRecordValues } from '../../adapter'
 import type { DrizzleDatabase } from '../../DrizzleDatabase'
 import * as postgres from './postgres'
 import * as sqlite from './sqlite'
+import { BaseDrizzleRecordAdapter } from '../../adapter/BaseDrizzleRecordAdapter'
 
 type DrizzleDidcommMediaSharingAdapterValues = DrizzleAdapterRecordValues<(typeof sqlite)['didcommMediaSharing']>
 
