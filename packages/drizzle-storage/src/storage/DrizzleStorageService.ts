@@ -103,4 +103,9 @@ export class DrizzleStorageService<T extends BaseRecord> implements StorageServi
     const records = await adapter.query(agentContext, query, queryOptions)
     return records
   }
+
+  // TODO: Check if its actually used. Ig not
+  public async getConfig(): Promise<DrizzleStorageModuleConfig> {
+    return this.config
+  }
 }

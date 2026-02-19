@@ -49,6 +49,7 @@ export interface DrizzleStorageModuleConfigOptions<Database extends AnyDrizzleDa
 /**
  * @public
  */
+
 export class DrizzleStorageModuleConfig {
   public readonly database: AnyDrizzleDatabase
   public readonly adapters: AnyDrizzleAdapter[]
@@ -68,9 +69,13 @@ export class DrizzleStorageModuleConfig {
       new Set([...coreBundle.records, ...options.bundles.flatMap((bundle) => bundle.records)])
     )
     this.adapters = allRecords
-      .map((record) => (record.adapter ? new record.adapter(this.database) : undefined))
-      .filter((adapter) => adapter !== undefined)
+      .map((record) => {
+        if (!record.adapter) return undefined
 
+        // Match the constructor: (database, config)
+        return new record.adapter(this.database, this)
+      })
+      .filter((adapter) => adapter !== undefined)
     this.schemas = getSchemaFromDrizzleRecords(allRecords, getDrizzleDatabaseType(options.database))
   }
 }

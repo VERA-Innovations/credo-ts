@@ -170,7 +170,7 @@ export abstract class BaseDrizzleRecordAdapter<
     const moduleConfig = this.getModuleConfig()
     if (!moduleConfig?.encryptedColumns) return []
 
-    const columnsToEncrypt = moduleConfig.encryptedColumns[this.recordClass.type] ?? []
+    const columnsToEncrypt = moduleConfig.encryptedColumns[this.recordClass.name] ?? []
     return columnsToEncrypt
   }
 
@@ -410,13 +410,13 @@ export abstract class BaseDrizzleRecordAdapter<
     try {
       if (isDrizzlePostgresDatabase(this.database)) {
         // biome-ignore lint/suspicious/noExplicitAny: no explanation
-        await this.database.insert(this.table.postgres).values(this.getValuesWithBase(agentContext, record) as any)
+        await this.database.insert(this.table.postgres).values(await this.getValuesWithBase(agentContext, record) as any)
         return
       }
 
       if (isDrizzleSqliteDatabase(this.database)) {
         // biome-ignore lint/suspicious/noExplicitAny: no explanation
-        await this.database.insert(this.table.sqlite).values(this.getValuesWithBase(agentContext, record) as any)
+        await this.database.insert(this.table.sqlite).values(await this.getValuesWithBase(agentContext, record) as any)
         return
       }
     } catch (error) {
@@ -480,7 +480,7 @@ export abstract class BaseDrizzleRecordAdapter<
         const updated = await session
           .update(this.table.postgres)
           // biome-ignore lint/suspicious/noExplicitAny: generics really don't play well here
-          .set(this.getValuesWithBase(agentContext, record) as any)
+          .set(await this.getValuesWithBase(agentContext, record) as any)
           .where(
             and(
               eq(this.table.postgres.id, record.id),
@@ -503,7 +503,7 @@ export abstract class BaseDrizzleRecordAdapter<
         const updated = await session
           .update(this.table.sqlite)
           // biome-ignore lint/suspicious/noExplicitAny: generics really don't play well here
-          .set(this.getValuesWithBase(agentContext, record) as any)
+          .set(await this.getValuesWithBase(agentContext, record) as any)
           .where(
             and(
               eq(this.table.sqlite.id, record.id),

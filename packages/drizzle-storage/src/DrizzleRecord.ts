@@ -1,4 +1,5 @@
 import type { AnyDrizzleAdapter } from './adapter/type'
+import type { DrizzleStorageModuleConfig } from './DrizzleStorageModuleConfig'
 
 export interface DrizzleRecordBundle {
   /**
@@ -55,7 +56,10 @@ export interface DrizzleRecord {
   postgres: Record<string, unknown>
   sqlite: Record<string, unknown>
   adapter?: new (
-    // biome-ignore lint/suspicious/noExplicitAny: no explanation
-    database: any
-  ) => AnyDrizzleAdapter
+    // Change this to match your DrizzleMdocRecordAdapter constructor
+    database: any,
+    config: DrizzleStorageModuleConfig
+  ) => AnyDrizzleAdapter,
+  encryptedColumns?: string[],
+  encryptionKey?: string
 }
