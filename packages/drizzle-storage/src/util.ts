@@ -1,5 +1,3 @@
-// TODO: Maybe fix this for environment apart from node
-
 import { and, eq, gt, lt, or } from 'drizzle-orm'
 import type { ExtraConfigColumn } from 'drizzle-orm/pg-core'
 import type { SQLiteColumn } from 'drizzle-orm/sqlite-core'
@@ -51,9 +49,9 @@ export function exhaustiveArray<U extends string, T extends readonly string[]>(
 
 export function cursorAfterCondition<
   Table extends // biome-ignore lint/suspicious/noExplicitAny: no explanation
-    | { id: SQLiteColumn<any>; createdAt: SQLiteColumn<any> }
-    // biome-ignore lint/suspicious/noExplicitAny: no explanation
-    | { id: ExtraConfigColumn<any>; createdAt: ExtraConfigColumn<any> },
+  | { id: SQLiteColumn<any>; createdAt: SQLiteColumn<any> }
+  // biome-ignore lint/suspicious/noExplicitAny: no explanation
+  | { id: ExtraConfigColumn<any>; createdAt: ExtraConfigColumn<any> },
 >(table: Table, cursor: { createdAt: Date; id: string }) {
   return or(
     // This condition is purposefully less than because we have sorted the records in order of latest records first
@@ -64,9 +62,9 @@ export function cursorAfterCondition<
 
 export function cursorBeforeCondition<
   Table extends // biome-ignore lint/suspicious/noExplicitAny: no explanation
-    | { id: SQLiteColumn<any>; createdAt: SQLiteColumn<any> }
-    // biome-ignore lint/suspicious/noExplicitAny: no explanation
-    | { id: ExtraConfigColumn<any>; createdAt: ExtraConfigColumn<any> },
+  | { id: SQLiteColumn<any>; createdAt: SQLiteColumn<any> }
+  // biome-ignore lint/suspicious/noExplicitAny: no explanation
+  | { id: ExtraConfigColumn<any>; createdAt: ExtraConfigColumn<any> },
 >(table: Table, cursor: { createdAt: Date; id: string }) {
   return or(
     // This condition is purposefully great than because we have sorted the records in order of latest records first

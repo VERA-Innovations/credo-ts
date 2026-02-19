@@ -41,14 +41,14 @@ type InternalCursor = {
   id: string
 }
 
-export type recordToCursorBody = {
-  createdAt: string
+export type RecordToCursorBody = {
+  createdAt: string | Date
   id: string
-} & Record<string, unknown>
+}
 
-export function recordToCursor(record: recordToCursorBody): string {
+export function recordToCursor(record: RecordToCursorBody): string {
   return encodeCursor({
-    createdAt: new Date(record.createdAt),
+    createdAt: record.createdAt instanceof Date ? record.createdAt : new Date(record.createdAt),
     id: record.id,
   })
 }
@@ -57,10 +57,26 @@ export function encodeCursor(cursor: InternalCursor): string {
   return Buffer.from(JSON.stringify(cursor)).toString('base64url')
 }
 
-export function decodeCursor(cursor: string): InternalCursor {
-  const decoded = JSON.parse(Buffer.from(cursor, 'base64url').toString())
-  return decoded?.createdAt ? { ...decoded, createdAt: new Date(decoded.createdAt) } : decoded
+export function decodeCursor(cursor: string): InternalCursor | null {
+  try {
+    const decoded = JSON.parse(Buffer.from(cursor, 'base64url').toString())
+
+    if (!decoded || typeof decoded !== 'object') return null
+    if (typeof decoded.id !== 'string') return null
+    if (!decoded.createdAt) return null
+
+    const createdAt = new Date(decoded?.createdAt)
+    if (Number.isNaN(createdAt.getTime())) return null
+
+    return {
+      id: decoded?.id,
+      createdAt,
+    }
+  } catch {
+    return null
+  }
 }
+
 
 // biome-ignore lint/suspicious/noExplicitAny: no explanation
 export type Query<T extends BaseRecord<any, any, any>> = AdvancedQuery<T> | SimpleQuery<T>

@@ -10,15 +10,13 @@ import {
   RecordNotFoundError,
 } from '@credo-ts/core'
 import { and, asc, DrizzleQueryError, desc, eq, type Simplify } from 'drizzle-orm'
-import { PgTransaction as _PgTransaction, PgTable, pgTable } from 'drizzle-orm/pg-core'
+import { PgTable, pgTable } from 'drizzle-orm/pg-core'
 import {
-  SQLiteTable as _SQLiteTable,
-  SQLiteTransaction as _SQLiteTransaction,
   sqliteTable,
 } from 'drizzle-orm/sqlite-core'
 import { type DrizzleDatabase, isDrizzlePostgresDatabase, isDrizzleSqliteDatabase } from '../DrizzleDatabase'
 import { CredoDrizzleStorageError } from '../error'
-import { getPostgresBaseRecordTable } from '../postgres'
+import { getPostgresBaseRecordTable } from '../postgres' // no
 import { getSqliteBaseRecordTable } from '../sqlite'
 import { cursorAfterCondition, cursorBeforeCondition } from '../util'
 import {
@@ -27,28 +25,11 @@ import {
   extractPostgresErrorCode,
   extractSqliteErrorCode,
 } from './drizzleError'
-import { type DrizzleCustomTagKeyMapping, queryToDrizzlePostgres } from './queryToDrizzlePostgres'
-import { queryToDrizzleSqlite } from './queryToDrizzleSqlite'
-
-// biome-ignore lint/suspicious/noExplicitAny: no explanation
-export type AnyDrizzleAdapter = BaseDrizzleRecordAdapter<any, any, any, any, any>
-// biome-ignore lint/suspicious/noExplicitAny: no explanation
-type SQLiteTransaction = _SQLiteTransaction<any, any, any, any>
-// biome-ignore lint/suspicious/noExplicitAny: no explanation
-type PgTransaction = _PgTransaction<any>
-
-type Transaction<T extends AnyDrizzleAdapter> = Parameters<Parameters<T['database']['transaction']>[0]>[0]
-
-export type DrizzleAdapterValues<Table extends _SQLiteTable> = Simplify<
-  Omit<
-    { [Key in keyof Table['$inferInsert']]: Table['$inferInsert'][Key] },
-    Exclude<keyof ReturnType<typeof getSqliteBaseRecordTable>, 'customTags'>
-  >
->
-
-export type DrizzleAdapterRecordValues<Table extends _SQLiteTable> = Simplify<
-  Omit<{ [Key in keyof Table['$inferInsert']]: Table['$inferInsert'][Key] }, 'contextCorrelationId'>
->
+import { type DrizzleCustomTagKeyMapping, queryToDrizzlePostgres } from './queryToDrizzlePostgres' // mo
+import { queryToDrizzleSqlite } from './queryToDrizzleSqlite' // no
+import type { DrizzleStorageModuleConfig } from '../DrizzleStorageModuleConfig'
+import { decryptDataWithKey, encryptDataWithKey } from '../storage/utils/encrypt'
+import type { DrizzleAdapterRecordValues, DrizzleAdapterValues, PgTransaction, SQLiteTransaction, Transaction } from './type'
 
 /**
  * Adapter between a specific Record class and the record Type
@@ -62,6 +43,9 @@ export abstract class BaseDrizzleRecordAdapter<
   SQLiteSchema extends Record<string, unknown>,
 > {
   public recordClass: BaseRecordConstructor<CredoRecord>
+
+  // Not sure if we should include 'metadata' column as well. Coz, we need that to be encrypted for connection profile
+  public protectedColumns: string[] = [];
 
   public table: {
     postgres: PostgresTable
@@ -81,10 +65,13 @@ export abstract class BaseDrizzleRecordAdapter<
       postgres: PostgresTable
       sqlite: SQLiteTable
     },
-    recordClass: BaseRecordConstructor<CredoRecord>
+    recordClass: BaseRecordConstructor<CredoRecord>,
+    additionalProtectedColumns: string[] = [],
+    public config: DrizzleStorageModuleConfig
   ) {
     this.table = table
     this.recordClass = recordClass
+    this.protectedColumns = ['contextCorrelationId', 'id', 'createdAt', 'updatedAt', ...additionalProtectedColumns]
   }
 
   public abstract getValues(record: CredoRecord, agentContext?: AgentContext): DrizzleAdapterValues<SQLiteTable>
@@ -108,6 +95,83 @@ export abstract class BaseDrizzleRecordAdapter<
     ) as DrizzleAdapterRecordValues<SQLiteTable>
 
     return this.toRecord(filteredValues, agentContext)
+  }
+
+  public getModuleConfig(): DrizzleStorageModuleConfig | null {
+    return this.config
+  }
+
+  protected prepareValuesForDb(record: any, agentContext?: AgentContext): Record<string, any> {
+    if (!this.getModuleConfig()?.enableEncryption) {
+      return record;
+    }
+    const result = { ...record };
+    const columnsToEncrypt = this.columnsToBeEncrypted();
+    const encryptionKey = (columnsToEncrypt.length > 0 && this.config.encryptionKey)
+      ? this.config.encryptionKey
+      : null;
+
+    // Loop through every key in the record to prepare it for the DB
+    for (const key in result) {
+      const rawValue = result[key];
+      if (rawValue === undefined || rawValue === null) continue;
+
+      const shouldEncrypt = columnsToEncrypt.includes(key) && !this.protectedColumns.includes(key);
+
+      if (shouldEncrypt && encryptionKey) {
+        const stringValue = typeof rawValue === 'object' ? JSON.stringify(rawValue) : String(rawValue);
+        result[key] = encryptDataWithKey(stringValue, encryptionKey);
+      } else if (typeof rawValue === 'object' && !Array.isArray(rawValue)) {
+        // Only stringify if it's a plain object, let Arrays pass through 
+        // IF the DB expects an actual Array type.
+        result[key] = JSON.stringify(rawValue);
+      }
+    }
+    return result;
+  }
+
+  protected prepareRecordFromDb(values: Record<string, any>, agentContext?: AgentContext): Record<string, any> {
+    const processed = { ...values };
+    const columnsToEncrypt = this.columnsToBeEncrypted();
+    const encryptionKey = (columnsToEncrypt.length > 0 && this.config.encryptionKey)
+      ? this.config.encryptionKey
+      : null;
+
+    for (const key in processed) {
+      let value = processed[key];
+      if (typeof value !== 'string') continue;
+
+      // 1. Decrypt if necessary
+      if (columnsToEncrypt.includes(key) && !this.protectedColumns.includes(key) && encryptionKey) {
+        try {
+          value = decryptDataWithKey(value, encryptionKey);
+        } catch (_e) {
+          console.error(`Decryption failed for ${key}`);
+        }
+      }
+
+      // 2. Generic JSON Auto-Parse
+      // If the resulting string looks like JSON, parse it.
+      // This handles 'content' or any other JSON-blob column automatically.
+      if (value.startsWith('{') || value.startsWith('[')) {
+        try {
+          processed[key] = JSON.parse(value);
+        } catch {
+          processed[key] = value; // Not valid JSON after all, keep as string
+        }
+      } else {
+        processed[key] = value;
+      }
+    }
+    return processed;
+  }
+
+  public columnsToBeEncrypted(): string[] {
+    const moduleConfig = this.getModuleConfig()
+    if (!moduleConfig?.encryptedColumns) return []
+
+    const columnsToEncrypt = moduleConfig.encryptedColumns[this.recordClass.type] ?? []
+    return columnsToEncrypt
   }
 
   public abstract toRecord(values: DrizzleAdapterRecordValues<SQLiteTable>, agentContext?: AgentContext): CredoRecord
@@ -134,12 +198,18 @@ export abstract class BaseDrizzleRecordAdapter<
         // AFTER cursor (lower bound)
         if (cursor?.after) {
           const afterCursor = decodeCursor(cursor.after)
+          if (!afterCursor) {
+            return []
+          }
           whereConditions.push(cursorAfterCondition(this.table.postgres, afterCursor))
         }
 
         // BEFORE cursor (upper bound)
         if (cursor?.before) {
           const beforeCursor = decodeCursor(cursor.before)
+          if (!beforeCursor) {
+            return []
+          }
           whereConditions.push(cursorBeforeCondition(this.table.postgres, beforeCursor))
         }
 
@@ -147,7 +217,7 @@ export abstract class BaseDrizzleRecordAdapter<
 
         // Order must flip ONLY for backward pagination
         const orderBy = isBackward
-          ? [asc(this.table.postgres.createdAt), asc(this.table.postgres.id)]
+          ? [asc(this.table.postgres.createdAt), desc(this.table.postgres.id)]
           : [desc(this.table.postgres.createdAt), asc(this.table.postgres.id)]
 
         let queryResult = this.database
@@ -179,7 +249,7 @@ export abstract class BaseDrizzleRecordAdapter<
         }
 
         return result.map(({ contextCorrelationId, ...item }) =>
-          this._toRecord(item as DrizzleAdapterRecordValues<PostgresTable>, agentContext)
+          this._toRecord(item as DrizzleAdapterRecordValues<PostgresTable>)
         )
       }
 
@@ -203,12 +273,20 @@ export abstract class BaseDrizzleRecordAdapter<
         // AFTER cursor (lower bound)
         if (cursor?.after) {
           const afterCursor = decodeCursor(cursor.after)
+
+          if (!afterCursor) {
+            return []
+          }
           whereConditions.push(cursorAfterCondition(this.table.sqlite, afterCursor))
         }
 
         // BEFORE cursor (upper bound)
         if (cursor?.before) {
           const beforeCursor = decodeCursor(cursor.before)
+
+          if (!beforeCursor) {
+            return []
+          }
           whereConditions.push(cursorBeforeCondition(this.table.sqlite, beforeCursor))
         }
 
@@ -216,7 +294,7 @@ export abstract class BaseDrizzleRecordAdapter<
 
         // Flip ordering ONLY for backward pagination
         const orderBy = isBackward
-          ? [asc(this.table.sqlite.createdAt), asc(this.table.sqlite.id)]
+          ? [asc(this.table.sqlite.createdAt), desc(this.table.sqlite.id)]
           : [desc(this.table.sqlite.createdAt), asc(this.table.sqlite.id)]
 
         let queryResult = this.database
@@ -248,7 +326,7 @@ export abstract class BaseDrizzleRecordAdapter<
         }
 
         return result.map(({ contextCorrelationId, ...item }) =>
-          this._toRecord(item as DrizzleAdapterRecordValues<SQLiteTable>, agentContext)
+          this._toRecord(item as DrizzleAdapterRecordValues<SQLiteTable>)
         )
       }
     } catch (error) {
