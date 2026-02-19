@@ -24,6 +24,10 @@
       "cli": "./build/media-sharing/bundle.mjs",
       "import": "./src/media-sharing/bundle.ts"
     },
+    "./private-media-sharing": {
+      "cli": "./build/private-media-sharing/bundle.mjs",
+      "import": "./src/private-media-sharing/bundle.ts"
+    },
     "./user-profile": {
       "cli": "./build/user-profile/bundle.mjs",
       "import": "./src/user-profile/bundle.ts"
@@ -74,6 +78,9 @@
       "./media-sharing": "./build/media-sharing/bundle.mjs",
       "./media-sharing/postgres": "./build/media-sharing/postgres.mjs",
       "./media-sharing/sqlite": "./build/media-sharing/sqlite.mjs",
+      "./private-media-sharing": "./build/private-media-sharing/bundle.mjs",
+      "./private-media-sharing/postgres": "./build/private-media-sharing/postgres.mjs",
+      "./private-media-sharing/sqlite": "./build/private-media-sharing/sqlite.mjs",
       "./user-profile": "./build/user-profile/bundle.mjs",
       "./user-profile/postgres": "./build/user-profile/postgres.mjs",
       "./user-profile/sqlite": "./build/user-profile/sqlite.mjs",
@@ -110,8 +117,8 @@
   "scripts": {
     "build": "tsdown --config-loader unconfig",
     "prepublishOnly": "pnpm run build",
-    "cli:local:compiled": "node --conditions cli bin.mjs --bundle core --bundle didcomm --bundle anoncreds --bundle action-menu --bundle question-answer --bundle drpc --bundle tenants --bundle openid4vc --bundle user-profile --bundle media-sharing",
-    "cli:local": "vite-node cli/bin.ts --bundle core --bundle didcomm --bundle anoncreds --bundle action-menu --bundle question-answer --bundle tenants --bundle user-profile --bundle media-sharing",
+    "cli:local:compiled": "node --conditions cli bin.mjs --bundle core --bundle didcomm --bundle anoncreds --bundle action-menu --bundle question-answer --bundle drpc --bundle tenants --bundle openid4vc --bundle user-profile --bundle media-sharing --bundle private-media-sharing",
+    "cli:local": "vite-node cli/bin.ts --bundle core --bundle didcomm --bundle anoncreds --bundle action-menu --bundle question-answer --bundle tenants --bundle media-sharing  --bundle private-media-sharing",
     "cli:local:generate": "pnpm cli:local generate",
     "cli:local:compiled:generate": "pnpm cli:local:compiled generate",
     "cli:local:migrate:postgres": "pnpm cli:local migrate --dialect postgres --database-url \"postgresql://postgres:postgres@localhost:5432/vera-mediasharing\"",
