@@ -1,4 +1,4 @@
-import { JsonTransformer, utils, type TagsBase } from '@credo-ts/core'
+import { JsonTransformer, utils, type TagsBase, type AgentContext } from '@credo-ts/core'
 import { type DrizzleAdapterRecordValues } from '../../adapter'
 import type { DrizzleDatabase } from '../../DrizzleDatabase'
 import * as postgres from './postgres'
@@ -26,7 +26,7 @@ export class DrizzleDidcommPrivateMediaSharingRecordAdapter extends BaseDrizzleR
     )
   }
 
-  public getValues(record: PrivateMediaRecord) {
+  public async getValues(record: PrivateMediaRecord, agentContext?: AgentContext) {
     const {
       userId,
       mediaType,
@@ -35,7 +35,7 @@ export class DrizzleDidcommPrivateMediaSharingRecordAdapter extends BaseDrizzleR
       ...customTags
     } = record.getTags()
 
-    return {
+    const rawValues = {
       /** BaseRecord fields handled by BaseDrizzleRecordAdapter */
       userId,
       mediaType,
@@ -48,14 +48,27 @@ export class DrizzleDidcommPrivateMediaSharingRecordAdapter extends BaseDrizzleR
         ? (JsonTransformer.toJSON(record.items) as PrivateMediaItem[])
         : null,
       version: String(record.version ?? 1),
-      customTags,
     }
+
+    // Await the asynchronous encryption/stringification logic
+    const processedValues = await this.prepareValuesForDb(rawValues, agentContext)
+
+    return {
+      ...processedValues,
+      customTags,
+    } as any
   }
 
-  public toRecord(values: DrizzleDidcommPrivateMediaSharingAdapterValues): PrivateMediaRecord {
+  public async toRecord(
+    values: DrizzleDidcommPrivateMediaSharingAdapterValues,
+    agentContext?: AgentContext
+  ): Promise<PrivateMediaRecord> {
     const { customTags, ...recordValues } = values
 
-    const record = JsonTransformer.fromJSON(recordValues, PrivateMediaRecord)
+    // Await the asynchronous decryption/parsing logic
+    const decryptedValues = await this.prepareRecordFromDb(recordValues, agentContext)
+
+    const record = JsonTransformer.fromJSON(decryptedValues, PrivateMediaRecord)
 
     if (customTags) {
       record.setTags(customTags as TagsBase)

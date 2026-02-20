@@ -1,4 +1,4 @@
-import { JsonTransformer, W3cCredentialRecord } from '@credo-ts/core'
+import { JsonTransformer, W3cCredentialRecord, type AgentContext, type TagsBase } from '@credo-ts/core'
 
 import { BaseDrizzleRecordAdapter } from '../../adapter/BaseDrizzleRecordAdapter'
 
@@ -9,6 +9,7 @@ import type { DrizzleAdapterRecordValues } from '../../adapter/type'
 import type { DrizzleStorageModuleConfig } from '../../DrizzleStorageModuleConfig'
 
 type DrizzleW3cCredentialAdapterValues = DrizzleAdapterRecordValues<(typeof sqlite)['w3cCredential']>
+
 export class DrizzleW3cCredentialRecordAdapter extends BaseDrizzleRecordAdapter<
   W3cCredentialRecord,
   typeof postgres.w3cCredential,
@@ -20,7 +21,7 @@ export class DrizzleW3cCredentialRecordAdapter extends BaseDrizzleRecordAdapter<
     super(database, { postgres: postgres.w3cCredential, sqlite: sqlite.w3cCredential }, W3cCredentialRecord, [], config)
   }
 
-  public getValues(record: W3cCredentialRecord) {
+  public async getValues(record: W3cCredentialRecord, agentContext?: AgentContext) {
     const {
       // Default Tags
       issuerId,
@@ -40,7 +41,7 @@ export class DrizzleW3cCredentialRecordAdapter extends BaseDrizzleRecordAdapter<
       ...customTags
     } = record.getTags()
 
-    return {
+    const rawValues = {
       // JWT vc is string, JSON-LD vc is object
       credentialInstances: record.credentialInstances,
       multiInstanceState: record.multiInstanceState,
@@ -57,11 +58,21 @@ export class DrizzleW3cCredentialRecordAdapter extends BaseDrizzleRecordAdapter<
       proofTypes,
       cryptosuites,
       algs,
-      customTags,
     }
+
+    // Await the asynchronous encryption/stringification logic
+    const processedValues = await this.prepareValuesForDb(rawValues, agentContext)
+
+    return {
+      ...processedValues,
+      customTags,
+    } as any
   }
 
-  public toRecord(values: DrizzleW3cCredentialAdapterValues): W3cCredentialRecord {
+  public async toRecord(
+    values: DrizzleW3cCredentialAdapterValues,
+    agentContext?: AgentContext
+  ): Promise<W3cCredentialRecord> {
     const {
       // Tags
       issuerId,
@@ -79,7 +90,10 @@ export class DrizzleW3cCredentialRecordAdapter extends BaseDrizzleRecordAdapter<
       ...remainingValues
     } = values
 
-    const record = JsonTransformer.fromJSON(remainingValues, W3cCredentialRecord)
+    // Await the asynchronous decryption/parsing logic
+    const decryptedValues = await this.prepareRecordFromDb(remainingValues, agentContext)
+
+    const record = JsonTransformer.fromJSON(decryptedValues, W3cCredentialRecord)
     record.setTags({
       issuerId,
       subjectIds,
@@ -92,7 +106,7 @@ export class DrizzleW3cCredentialRecordAdapter extends BaseDrizzleRecordAdapter<
       cryptosuites: cryptosuites ?? undefined,
       algs: algs ?? undefined,
       expandedTypes: expandedTypes ?? undefined,
-      ...customTags,
+      ...(customTags as TagsBase),
     })
 
     return record

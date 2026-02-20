@@ -1,4 +1,4 @@
-import { JsonTransformer, type TagsBase } from '@credo-ts/core'
+import { JsonTransformer, type TagsBase, type AgentContext } from '@credo-ts/core'
 import { OpenId4VcIssuanceSessionRecord } from '@credo-ts/openid4vc'
 import {
   BaseDrizzleRecordAdapter
@@ -6,12 +6,13 @@ import {
 import type { DrizzleDatabase } from '../../DrizzleDatabase'
 import * as postgres from './postgres'
 import * as sqlite from './sqlite'
-import type { DrizzleAdapterRecordValues, DrizzleAdapterValues } from '../../adapter/type'
+import type { DrizzleAdapterRecordValues } from '../../adapter/type'
 import type { DrizzleStorageModuleConfig } from '../../DrizzleStorageModuleConfig'
 
 type DrizzleOpenId4VcIssuanceSessionMenuAdapterValues = DrizzleAdapterRecordValues<
   (typeof sqlite)['openId4VcIssuanceSession']
 >
+
 export class DrizzleOpenId4VcIssuanceSessionRecordAdapter extends BaseDrizzleRecordAdapter<
   OpenId4VcIssuanceSessionRecord,
   typeof postgres.openId4VcIssuanceSession,
@@ -38,9 +39,10 @@ export class DrizzleOpenId4VcIssuanceSessionRecordAdapter extends BaseDrizzleRec
     chainedIdentityState: ['chainedIdentity', 'externalState'],
   } as const
 
-  public getValues(
-    record: OpenId4VcIssuanceSessionRecord
-  ): DrizzleAdapterValues<(typeof sqlite)['openId4VcIssuanceSession']> {
+  public async getValues(
+    record: OpenId4VcIssuanceSessionRecord,
+    agentContext?: AgentContext
+  ) {
     const {
       // biome-ignore lint/correctness/noUnusedVariables: no explanation
       authorizationCode,
@@ -62,7 +64,7 @@ export class DrizzleOpenId4VcIssuanceSessionRecordAdapter extends BaseDrizzleRec
       ...customTags
     } = record.getTags()
 
-    return {
+    const rawValues = {
       credentialOfferId,
       credentialOfferUri,
       generateRefreshTokens: record.generateRefreshTokens,
@@ -75,15 +77,15 @@ export class DrizzleOpenId4VcIssuanceSessionRecordAdapter extends BaseDrizzleRec
       credentialOfferPayload: record.credentialOfferPayload,
       authorization: record.authorization
         ? {
-            ...record.authorization,
-            codeExpiresAt: record.authorization.codeExpiresAt?.toISOString(),
-          }
+          ...record.authorization,
+          codeExpiresAt: record.authorization.codeExpiresAt?.toISOString(),
+        }
         : undefined,
       chainedIdentity: record.chainedIdentity
         ? {
-            ...record.chainedIdentity,
-            requestUriExpiresAt: record.chainedIdentity.requestUriExpiresAt?.toISOString(),
-          }
+          ...record.chainedIdentity,
+          requestUriExpiresAt: record.chainedIdentity.requestUriExpiresAt?.toISOString(),
+        }
         : undefined,
       clientId: record.clientId,
       dpop: record.dpop,
@@ -94,14 +96,27 @@ export class DrizzleOpenId4VcIssuanceSessionRecordAdapter extends BaseDrizzleRec
       presentation: record.presentation,
       userPin: record.userPin,
       walletAttestation: record.walletAttestation,
-      customTags,
     }
+
+    // Await asynchronous encryption and stringification
+    const processedValues = await this.prepareValuesForDb(rawValues, agentContext)
+
+    return {
+      ...processedValues,
+      customTags,
+    } as any
   }
 
-  public toRecord(values: DrizzleOpenId4VcIssuanceSessionMenuAdapterValues): OpenId4VcIssuanceSessionRecord {
+  public async toRecord(
+    values: DrizzleOpenId4VcIssuanceSessionMenuAdapterValues,
+    agentContext?: AgentContext
+  ): Promise<OpenId4VcIssuanceSessionRecord> {
     const { customTags, ...remainingValues } = values
 
-    const record = JsonTransformer.fromJSON(remainingValues, OpenId4VcIssuanceSessionRecord)
+    // Await asynchronous decryption and parsing
+    const decryptedValues = await this.prepareRecordFromDb(remainingValues, agentContext)
+
+    const record = JsonTransformer.fromJSON(decryptedValues, OpenId4VcIssuanceSessionRecord)
     if (customTags) record.setTags(customTags as TagsBase)
 
     return record

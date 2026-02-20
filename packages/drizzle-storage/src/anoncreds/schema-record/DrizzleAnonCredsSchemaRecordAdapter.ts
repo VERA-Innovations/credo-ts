@@ -1,5 +1,5 @@
 import { AnonCredsSchemaRecord } from '@credo-ts/anoncreds'
-import { JsonTransformer } from '@credo-ts/core'
+import { AgentContext, JsonTransformer, type TagsBase } from '@credo-ts/core'
 import { BaseDrizzleRecordAdapter } from '../../adapter/BaseDrizzleRecordAdapter'
 import type { DrizzleDatabase } from '../../DrizzleDatabase'
 import * as postgres from './postgres'
@@ -8,6 +8,7 @@ import type { DrizzleAdapterRecordValues } from '../../adapter/type'
 import type { DrizzleStorageModuleConfig } from '../../DrizzleStorageModuleConfig'
 
 type DrizzleAnonCredsSchemaAdapterValues = DrizzleAdapterRecordValues<(typeof sqlite)['anonCredsSchema']>
+
 export class DrizzleAnonCredsSchemaRecordAdapter extends BaseDrizzleRecordAdapter<
   AnonCredsSchemaRecord,
   typeof postgres.anonCredsSchema,
@@ -19,12 +20,13 @@ export class DrizzleAnonCredsSchemaRecordAdapter extends BaseDrizzleRecordAdapte
     super(database, { postgres: postgres.anonCredsSchema, sqlite: sqlite.anonCredsSchema }, AnonCredsSchemaRecord, [], config)
   }
 
-  public getValues(record: AnonCredsSchemaRecord) {
+  public async getValues(record: AnonCredsSchemaRecord, agentContext?: AgentContext) {
     const { schemaId, issuerId, schemaName, schemaVersion, methodName, unqualifiedSchemaId, ...customTags } =
       record.getTags()
 
     const { issuerId: _, name: __, version: ___, ...restSchema } = record.schema
-    return {
+
+    const rawValues = {
       schemaId,
       schema: restSchema,
       issuerId,
@@ -32,20 +34,41 @@ export class DrizzleAnonCredsSchemaRecordAdapter extends BaseDrizzleRecordAdapte
       schemaVersion,
       methodName,
       unqualifiedSchemaId,
-      customTags,
     }
+
+    // Await encryption/stringification
+    const processedValues = await this.prepareValuesForDb(rawValues, agentContext)
+
+    return {
+      ...processedValues,
+      customTags,
+    } as any
   }
 
-  public toRecord(values: DrizzleAnonCredsSchemaAdapterValues): AnonCredsSchemaRecord {
+  public async toRecord(
+    values: DrizzleAnonCredsSchemaAdapterValues,
+    agentContext?: AgentContext
+  ): Promise<AnonCredsSchemaRecord> {
     const { customTags, unqualifiedSchemaId, issuerId, schemaName, schemaVersion, ...remainingValues } = values
 
+    // Await decryption/parsing
+    const decryptedValues = await this.prepareRecordFromDb(remainingValues, agentContext)
+
     const record = JsonTransformer.fromJSON(
-      { ...remainingValues, schema: { ...remainingValues.schema, issuerId, name: schemaName, version: schemaVersion } },
+      {
+        ...decryptedValues,
+        schema: {
+          ...decryptedValues.schema,
+          issuerId,
+          name: schemaName,
+          version: schemaVersion
+        }
+      },
       AnonCredsSchemaRecord
     )
 
     record.setTags({
-      ...customTags,
+      ...customTags as TagsBase,
       unqualifiedSchemaId: unqualifiedSchemaId ?? undefined,
     })
 

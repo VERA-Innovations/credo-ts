@@ -1,5 +1,5 @@
 import { AnonCredsLinkSecretRecord } from '@credo-ts/anoncreds'
-import { JsonTransformer, type TagsBase } from '@credo-ts/core'
+import { AgentContext, JsonTransformer, type TagsBase } from '@credo-ts/core'
 import { BaseDrizzleRecordAdapter } from '../../adapter/BaseDrizzleRecordAdapter'
 import type { DrizzleDatabase } from '../../DrizzleDatabase'
 import * as postgres from './postgres'
@@ -8,6 +8,7 @@ import type { DrizzleAdapterRecordValues } from '../../adapter/type'
 import type { DrizzleStorageModuleConfig } from '../../DrizzleStorageModuleConfig'
 
 type DrizzleAnonCredsLinkSecretAdapterValues = DrizzleAdapterRecordValues<(typeof sqlite)['anonCredsLinkSecret']>
+
 export class DrizzleAnonCredsLinkSecretRecordAdapter extends BaseDrizzleRecordAdapter<
   AnonCredsLinkSecretRecord,
   typeof postgres.anonCredsLinkSecret,
@@ -19,26 +20,45 @@ export class DrizzleAnonCredsLinkSecretRecordAdapter extends BaseDrizzleRecordAd
     super(
       database,
       { postgres: postgres.anonCredsLinkSecret, sqlite: sqlite.anonCredsLinkSecret },
-      AnonCredsLinkSecretRecord, [], config
+      AnonCredsLinkSecretRecord,
+      [],
+      config
     )
   }
 
-  public getValues(record: AnonCredsLinkSecretRecord) {
+  public async getValues(record: AnonCredsLinkSecretRecord, agentContext?: AgentContext) {
     const { linkSecretId, isDefault, ...customTags } = record.getTags()
 
-    return {
+    const rawValues = {
       linkSecretId,
       isDefault,
       value: record.value,
-      customTags,
     }
+
+    // Await the asynchronous encryption/stringification logic
+    const processedValues = await this.prepareValuesForDb(rawValues, agentContext)
+
+    return {
+      ...processedValues,
+      customTags,
+    } as DrizzleAnonCredsLinkSecretAdapterValues
   }
 
-  public toRecord(values: DrizzleAnonCredsLinkSecretAdapterValues): AnonCredsLinkSecretRecord {
+  public async toRecord(
+    values: DrizzleAnonCredsLinkSecretAdapterValues,
+    agentContext?: AgentContext
+  ): Promise<AnonCredsLinkSecretRecord> {
     const { customTags, isDefault, ...remainingValues } = values
 
-    const record = JsonTransformer.fromJSON(remainingValues, AnonCredsLinkSecretRecord)
-    record.setTags({ ...customTags, isDefault: isDefault ?? undefined } as TagsBase)
+    // Await the asynchronous decryption/parsing logic
+    const decryptedValues = await this.prepareRecordFromDb(remainingValues, agentContext)
+
+    const record = JsonTransformer.fromJSON(decryptedValues, AnonCredsLinkSecretRecord)
+
+    record.setTags({
+      ...customTags as TagsBase,
+      isDefault: isDefault ?? undefined
+    })
 
     return record
   }

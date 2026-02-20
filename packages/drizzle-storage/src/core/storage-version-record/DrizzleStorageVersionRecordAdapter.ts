@@ -20,14 +20,14 @@ export class DrizzleStorageVersionRecordAdapter extends BaseDrizzleRecordAdapter
     super(database, { postgres: postgres.storageVersion, sqlite: sqlite.storageVersion }, StorageVersionRecord, [], config)
   }
 
-  public getValues(record: StorageVersionRecord) {
+  public async getValues(record: StorageVersionRecord) {
     return {
       storageVersion: record.storageVersion,
       customTags: record.getTags() as Record<string, string>,
     }
   }
 
-  public toRecord(values: DrizzleStorageVersionRecordAdapterValues): StorageVersionRecord {
+  public async toRecord(values: DrizzleStorageVersionRecordAdapterValues): Promise<StorageVersionRecord> {
     const { customTags, ...remainingValues } = values
 
     const record = JsonTransformer.fromJSON(remainingValues, StorageVersionRecord)

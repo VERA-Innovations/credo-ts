@@ -1,5 +1,5 @@
 import { AnonCredsRevocationRegistryDefinitionRecord } from '@credo-ts/anoncreds'
-import { JsonTransformer, type TagsBase } from '@credo-ts/core'
+import { AgentContext, JsonTransformer, type TagsBase } from '@credo-ts/core'
 import { BaseDrizzleRecordAdapter } from '../../adapter/BaseDrizzleRecordAdapter'
 import type { DrizzleDatabase } from '../../DrizzleDatabase'
 import * as postgres from './postgres'
@@ -10,6 +10,7 @@ import type { DrizzleStorageModuleConfig } from '../../DrizzleStorageModuleConfi
 type DrizzleAnonCredsRevocationRegistryDefinitionAdapterValues = DrizzleAdapterRecordValues<
   (typeof sqlite)['anonCredsRevocationRegistryDefinition']
 >
+
 export class DrizzleAnonCredsRevocationRegistryDefinitionRecordAdapter extends BaseDrizzleRecordAdapter<
   AnonCredsRevocationRegistryDefinitionRecord,
   typeof postgres.anonCredsRevocationRegistryDefinition,
@@ -30,23 +31,34 @@ export class DrizzleAnonCredsRevocationRegistryDefinitionRecordAdapter extends B
     )
   }
 
-  public getValues(record: AnonCredsRevocationRegistryDefinitionRecord) {
+  public async getValues(record: AnonCredsRevocationRegistryDefinitionRecord, agentContext?: AgentContext) {
     const { revocationRegistryDefinitionId, credentialDefinitionId, ...customTags } = record.getTags()
 
-    return {
+    const rawValues = {
       revocationRegistryDefinitionId,
       credentialDefinitionId,
       revocationRegistryDefinition: record.revocationRegistryDefinition,
-      customTags,
     }
+
+    // Await encryption/stringification
+    const processedValues = await this.prepareValuesForDb(rawValues, agentContext)
+
+    return {
+      ...processedValues,
+      customTags,
+    } as DrizzleAnonCredsRevocationRegistryDefinitionAdapterValues
   }
 
-  public toRecord(
-    values: DrizzleAnonCredsRevocationRegistryDefinitionAdapterValues
-  ): AnonCredsRevocationRegistryDefinitionRecord {
+  public async toRecord(
+    values: DrizzleAnonCredsRevocationRegistryDefinitionAdapterValues,
+    agentContext?: AgentContext
+  ): Promise<AnonCredsRevocationRegistryDefinitionRecord> {
     const { customTags, credentialDefinitionId, ...remainingValues } = values
 
-    const record = JsonTransformer.fromJSON(remainingValues, AnonCredsRevocationRegistryDefinitionRecord)
+    // Await decryption/parsing
+    const decryptedValues = await this.prepareRecordFromDb(remainingValues, agentContext)
+
+    const record = JsonTransformer.fromJSON(decryptedValues, AnonCredsRevocationRegistryDefinitionRecord)
     record.setTags({ ...customTags, credentialDefinitionId } as TagsBase)
 
     return record

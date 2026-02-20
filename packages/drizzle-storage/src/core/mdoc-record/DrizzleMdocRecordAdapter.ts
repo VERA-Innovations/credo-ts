@@ -1,4 +1,4 @@
-import { JsonTransformer, MdocRecord } from '@credo-ts/core'
+import { JsonTransformer, MdocRecord, type AgentContext, type TagsBase } from '@credo-ts/core'
 
 import { BaseDrizzleRecordAdapter } from '../../adapter/BaseDrizzleRecordAdapter'
 
@@ -9,6 +9,7 @@ import type { DrizzleStorageModuleConfig } from '../../DrizzleStorageModuleConfi
 import type { DrizzleAdapterRecordValues } from '../../adapter/type'
 
 type DrizzleMdocAdapterValues = DrizzleAdapterRecordValues<(typeof sqlite)['mdoc']>
+
 export class DrizzleMdocRecordAdapter extends BaseDrizzleRecordAdapter<
   MdocRecord,
   typeof postgres.mdoc,
@@ -20,26 +21,36 @@ export class DrizzleMdocRecordAdapter extends BaseDrizzleRecordAdapter<
     super(database, { postgres: postgres.mdoc, sqlite: sqlite.mdoc }, MdocRecord, [], config)
   }
 
-  public getValues(record: MdocRecord) {
+  public async getValues(record: MdocRecord, agentContext?: AgentContext) {
     const { alg, docType, multiInstanceState: _, ...customTags } = record.getTags()
 
-    return {
+    const rawValues = {
       alg,
       docType,
       credentialInstances: record.credentialInstances,
       multiInstanceState: record.multiInstanceState,
-      customTags,
     }
+
+    // Await the asynchronous encryption/stringification logic
+    const processedValues = await this.prepareValuesForDb(rawValues, agentContext)
+
+    return {
+      ...processedValues,
+      customTags,
+    } as any
   }
 
-  public toRecord(values: DrizzleMdocAdapterValues): MdocRecord {
+  public async toRecord(values: DrizzleMdocAdapterValues, agentContext?: AgentContext): Promise<MdocRecord> {
     const { alg, docType, customTags, ...remainingValues } = values
 
-    const record = JsonTransformer.fromJSON(remainingValues, MdocRecord)
+    // Await the asynchronous decryption/parsing logic
+    const decryptedValues = await this.prepareRecordFromDb(remainingValues, agentContext)
+
+    const record = JsonTransformer.fromJSON(decryptedValues, MdocRecord)
     record.setTags({
       alg,
       docType,
-      ...customTags,
+      ...(customTags as TagsBase),
     })
 
     return record

@@ -26,14 +26,14 @@ export class DrizzleSingleContextLruCacheRecordAdapter extends BaseDrizzleRecord
     )
   }
 
-  public getValues(record: SingleContextLruCacheRecord) {
+  public async getValues(record: SingleContextLruCacheRecord) {
     return {
       entries: Object.fromEntries(record.entries.entries()),
       customTags: record.getTags(),
     }
   }
 
-  public toRecord(values: DrizzleSingleContextLruCacheAdapterValues): SingleContextLruCacheRecord {
+  public async toRecord(values: DrizzleSingleContextLruCacheAdapterValues): Promise<SingleContextLruCacheRecord> {
     const { entries, customTags, ...remainingValues } = values
 
     const record = JsonTransformer.fromJSON(

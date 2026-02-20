@@ -1,5 +1,5 @@
 import { AnonCredsCredentialDefinitionPrivateRecord } from '@credo-ts/anoncreds'
-import { JsonTransformer, type TagsBase } from '@credo-ts/core'
+import { AgentContext, JsonTransformer, type TagsBase } from '@credo-ts/core'
 import { BaseDrizzleRecordAdapter } from '../../adapter/BaseDrizzleRecordAdapter'
 import type { DrizzleDatabase } from '../../DrizzleDatabase'
 import * as postgres from './postgres'
@@ -25,22 +25,33 @@ export class DrizzleAnonCredsCredentialDefinitionPrivateRecordAdapter extends Ba
     )
   }
 
-  public getValues(record: AnonCredsCredentialDefinitionPrivateRecord) {
+  public async getValues(record: AnonCredsCredentialDefinitionPrivateRecord, agentContext?: AgentContext) {
     const { credentialDefinitionId, ...customTags } = record.getTags()
-
-    return {
-      credentialDefinitionId,
-      value: record.value,
-      customTags,
+  
+      // Map the record properties to a plain object
+      const rawValues = {
+        credentialDefinitionId,
+        value: record.value
+      }
+  
+      // We'll let the base class handle dynamic encryption and object-to-string conversion
+      const processedValues = await this.prepareValuesForDb(rawValues, agentContext)
+      return {
+        ...processedValues,
+        customTags: customTags,
+      } as DrizzleAnonCredsCredentialDefinitionPrivateAdapterValues
     }
-  }
 
-  public toRecord(
-    values: DrizzleAnonCredsCredentialDefinitionPrivateAdapterValues
-  ): AnonCredsCredentialDefinitionPrivateRecord {
+  public async toRecord(
+    values: DrizzleAnonCredsCredentialDefinitionPrivateAdapterValues, agentContext: AgentContext
+  ): Promise<AnonCredsCredentialDefinitionPrivateRecord> {
+    // TODO: If we want to encrypt the 'credentialDefinitionId'. We would need to add that in remainingValues as well
     const { customTags, credentialDefinitionId, ...remainingValues } = values
 
-    const record = JsonTransformer.fromJSON(remainingValues, AnonCredsCredentialDefinitionPrivateRecord)
+    // 1. Let the base class handle dynamic decryption and string-to-object parsing
+    const decryptedValues = await this.prepareRecordFromDb(remainingValues, agentContext)
+
+    const record = JsonTransformer.fromJSON(decryptedValues, AnonCredsCredentialDefinitionPrivateRecord)
     record.setTags({ ...customTags, credentialDefinitionId } as TagsBase)
 
     return record

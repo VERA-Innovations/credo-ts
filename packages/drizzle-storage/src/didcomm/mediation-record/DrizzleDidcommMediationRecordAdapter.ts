@@ -21,7 +21,7 @@ export class DrizzleDidcommMediationRecordAdapter extends BaseDrizzleRecordAdapt
     super(database, { postgres: postgres.didcommMediation, sqlite: sqlite.didcommMediation }, DidCommMediationRecord, [], config)
   }
 
-  public getValues(record: DidCommMediationRecord): DrizzleAdapterValues<(typeof sqlite)['didcommMediation']> {
+  public async getValues(record: DidCommMediationRecord): Promise<DrizzleAdapterValues<(typeof sqlite)['didcommMediation']>> {
     const { connectionId, recipientKeys, role, state, threadId, default: defaultTag, ...customTags } = record.getTags()
 
     return {
@@ -38,7 +38,7 @@ export class DrizzleDidcommMediationRecordAdapter extends BaseDrizzleRecordAdapt
     }
   }
 
-  public toRecord(values: DrizzleDidcommMediationAdapterValues): DidCommMediationRecord {
+  public async toRecord(values: DrizzleDidcommMediationAdapterValues): Promise<DidCommMediationRecord> {
     const { customTags, default: defaultTag, ...remainingValues } = values
 
     const record = JsonTransformer.fromJSON(remainingValues, DidCommMediationRecord)

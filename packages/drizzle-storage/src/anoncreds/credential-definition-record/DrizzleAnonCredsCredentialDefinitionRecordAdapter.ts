@@ -1,5 +1,5 @@
 import { AnonCredsCredentialDefinitionRecord } from '@credo-ts/anoncreds'
-import { JsonTransformer, type TagsBase } from '@credo-ts/core'
+import { AgentContext, JsonTransformer, type TagsBase } from '@credo-ts/core'
 import { BaseDrizzleRecordAdapter } from '../../adapter/BaseDrizzleRecordAdapter'
 import type { DrizzleDatabase } from '../../DrizzleDatabase'
 import * as postgres from './postgres'
@@ -21,11 +21,13 @@ export class DrizzleAnonCredsCredentialDefinitionRecordAdapter extends BaseDrizz
     super(
       database,
       { postgres: postgres.anonCredsCredentialDefinition, sqlite: sqlite.anonCredsCredentialDefinition },
-      AnonCredsCredentialDefinitionRecord, [], config
+      AnonCredsCredentialDefinitionRecord,
+      [],
+      config
     )
   }
 
-  public getValues(record: AnonCredsCredentialDefinitionRecord) {
+  public async getValues(record: AnonCredsCredentialDefinitionRecord, agentContext?: AgentContext) {
     const {
       // biome-ignore lint/correctness/noUnusedVariables: no explanation
       schemaId: schemaIdTag,
@@ -41,7 +43,8 @@ export class DrizzleAnonCredsCredentialDefinitionRecordAdapter extends BaseDrizz
 
     const { issuerId, schemaId, tag, ...credentialDefinitionRest } = record.credentialDefinition
 
-    return {
+    // 1. Prepare the raw data object
+    const rawValues = {
       credentialDefinitionId,
       methodName,
       unqualifiedCredentialDefinitionId,
@@ -50,21 +53,41 @@ export class DrizzleAnonCredsCredentialDefinitionRecordAdapter extends BaseDrizz
       issuerId,
       tag,
       credentialDefinition: credentialDefinitionRest,
-
-      customTags,
     }
+
+    // 2. Process for encryption/stringification via base class
+    const processedValues = await this.prepareValuesForDb(rawValues, agentContext)
+
+    return {
+      ...processedValues,
+      customTags: customTags,
+    } as DrizzleAnonCredsCredentialDefinitionAdapterValues
   }
 
-  public toRecord(values: DrizzleAnonCredsCredentialDefinitionAdapterValues): AnonCredsCredentialDefinitionRecord {
+  public async toRecord(
+    values: DrizzleAnonCredsCredentialDefinitionAdapterValues,
+    agentContext?: AgentContext
+  ): Promise<AnonCredsCredentialDefinitionRecord> {
     const { customTags, unqualifiedCredentialDefinitionId, issuerId, schemaId, tag, ...remainingValues } = values
 
+    // 1. Decrypt and parse values from DB
+    const decryptedValues = await this.prepareRecordFromDb(remainingValues, agentContext)
+
+    // 2. Reconstruct the record with its nested credentialDefinition object
     const record = JsonTransformer.fromJSON(
       {
-        ...remainingValues,
-        credentialDefinition: { ...remainingValues.credentialDefinition, issuerId, schemaId, tag },
+        ...decryptedValues,
+        credentialDefinition: {
+          ...decryptedValues.credentialDefinition,
+          issuerId,
+          schemaId,
+          tag
+        },
       },
       AnonCredsCredentialDefinitionRecord
     )
+
+    // 3. Re-apply tags
     record.setTags({
       ...customTags,
       unqualifiedCredentialDefinitionId: unqualifiedCredentialDefinitionId ?? undefined,

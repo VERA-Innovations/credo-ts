@@ -1,5 +1,5 @@
 import { DidCommMediaSharingRecord, SharedMediaItem } from '@2060.io/credo-ts-didcomm-media-sharing'
-import { JsonTransformer, type TagsBase, utils } from '@credo-ts/core'
+import { JsonTransformer, type TagsBase, utils, type AgentContext } from '@credo-ts/core'
 import { type DrizzleAdapterRecordValues } from '../../adapter'
 import type { DrizzleDatabase } from '../../DrizzleDatabase'
 import * as postgres from './postgres'
@@ -26,10 +26,10 @@ export class DrizzleDidcommMediaSharingRecordAdapter extends BaseDrizzleRecordAd
     )
   }
 
-  public getValues(record: DidCommMediaSharingRecord) {
+  public async getValues(record: DidCommMediaSharingRecord, agentContext?: AgentContext) {
     const { role, connectionId, threadId, parentThreadId, description, ...customTags } = record.getTags()
 
-    return {
+    const rawValues = {
       sentTime: record.sentTime,
 
       connectionId,
@@ -43,15 +43,27 @@ export class DrizzleDidcommMediaSharingRecordAdapter extends BaseDrizzleRecordAd
       items: record.items ? (JsonTransformer.toJSON(record.items) as SharedMediaItem[]) : null,
 
       metadata: record.metadata ? JsonTransformer.toJSON(record.metadata) : null,
-
-      customTags,
     }
+
+    // Await the asynchronous encryption/stringification logic
+    const processedValues = await this.prepareValuesForDb(rawValues, agentContext)
+
+    return {
+      ...processedValues,
+      customTags,
+    } as any
   }
 
-  public toRecord(values: DrizzleDidcommMediaSharingAdapterValues): DidCommMediaSharingRecord {
+  public async toRecord(
+    values: DrizzleDidcommMediaSharingAdapterValues,
+    agentContext?: AgentContext
+  ): Promise<DidCommMediaSharingRecord> {
     const { customTags, ...recordValues } = values
 
-    const record = JsonTransformer.fromJSON(recordValues, DidCommMediaSharingRecord)
+    // Await the asynchronous decryption/parsing logic
+    const decryptedValues = await this.prepareRecordFromDb(recordValues, agentContext)
+
+    const record = JsonTransformer.fromJSON(decryptedValues, DidCommMediaSharingRecord)
 
     if (customTags) {
       record.setTags(customTags as TagsBase)

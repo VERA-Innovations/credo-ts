@@ -27,9 +27,9 @@ export class DrizzleDidcommMediatorRoutingRecordAdapter extends BaseDrizzleRecor
     )
   }
 
-  public getValues(
+  public async getValues(
     record: DidCommMediatorRoutingRecord
-  ): DrizzleAdapterValues<(typeof sqlite)['didcommMediatorRouting']> {
+  ): Promise<DrizzleAdapterValues<(typeof sqlite)['didcommMediatorRouting']>> {
     const { routingKeyFingerprints, ...customTags } = record.getTags()
 
     return {
@@ -40,7 +40,7 @@ export class DrizzleDidcommMediatorRoutingRecordAdapter extends BaseDrizzleRecor
     }
   }
 
-  public toRecord(values: DrizzleDidcommMediatorRoutingAdapterValues): DidCommMediatorRoutingRecord {
+  public async toRecord(values: DrizzleDidcommMediatorRoutingAdapterValues): Promise<DidCommMediatorRoutingRecord> {
     const { customTags, ...remainingValues } = values
 
     const record = JsonTransformer.fromJSON(remainingValues, DidCommMediatorRoutingRecord)

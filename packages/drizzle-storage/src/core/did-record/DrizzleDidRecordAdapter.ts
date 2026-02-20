@@ -1,4 +1,4 @@
-import { AgentContext, DidRecord, JsonTransformer } from '@credo-ts/core'
+import { AgentContext, DidRecord, JsonTransformer, type TagsBase } from '@credo-ts/core'
 import { BaseDrizzleRecordAdapter } from '../../adapter/BaseDrizzleRecordAdapter'
 console.log('Base Class Check:', BaseDrizzleRecordAdapter);
 
@@ -20,7 +20,7 @@ export class DrizzleDidRecordAdapter extends BaseDrizzleRecordAdapter<
     super(database, { postgres: postgres.did, sqlite: sqlite.did }, DidRecord, [], config)
   }
 
-  public getValues(record: DidRecord, agentContext?: AgentContext) {
+  public async getValues(record: DidRecord, agentContext?: AgentContext) {
     const {
       // Default Tags
       recipientKeyFingerprints,
@@ -36,7 +36,7 @@ export class DrizzleDidRecordAdapter extends BaseDrizzleRecordAdapter<
       ...customTags
     } = record.getTags()
 
-    return {
+    const rawValues = {
       did: record.did,
       role: role,
       didDocument: record.didDocument,
@@ -47,11 +47,18 @@ export class DrizzleDidRecordAdapter extends BaseDrizzleRecordAdapter<
       method,
       methodSpecificIdentifier,
       alternativeDids,
-      customTags,
     }
+
+    // Await the asynchronous encryption/stringification logic
+    const processedValues = await this.prepareValuesForDb(rawValues, agentContext)
+
+    return {
+      ...processedValues,
+      customTags,
+    } as DrizzleDidAdapterValues
   }
 
-  public toRecord(values: DrizzleDidAdapterValues, agentContext?: AgentContext): DidRecord {
+  public async toRecord(values: DrizzleDidAdapterValues, agentContext?: AgentContext): Promise<DidRecord> {
     const {
       // Default Tags
       recipientKeyFingerprints,
@@ -62,13 +69,16 @@ export class DrizzleDidRecordAdapter extends BaseDrizzleRecordAdapter<
       ...remainingValues
     } = values
 
-    const record = JsonTransformer.fromJSON(remainingValues, DidRecord)
+    // Await the asynchronous decryption/parsing logic
+    const decryptedValues = await this.prepareRecordFromDb(remainingValues, agentContext)
+
+    const record = JsonTransformer.fromJSON(decryptedValues, DidRecord)
     record.setTags({
       recipientKeyFingerprints: recipientKeyFingerprints ?? undefined,
       method,
       methodSpecificIdentifier,
       alternativeDids: alternativeDids ?? undefined,
-      ...customTags,
+      ...customTags as TagsBase,
     })
 
     return record

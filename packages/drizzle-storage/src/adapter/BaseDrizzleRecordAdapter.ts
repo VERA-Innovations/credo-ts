@@ -9,7 +9,7 @@ import {
   RecordDuplicateError,
   RecordNotFoundError,
 } from '@credo-ts/core'
-import { and, asc, DrizzleQueryError, desc, eq, type Simplify } from 'drizzle-orm'
+import { and, asc, DrizzleQueryError, desc, eq } from 'drizzle-orm'
 import { PgTable, pgTable } from 'drizzle-orm/pg-core'
 import {
   sqliteTable,
@@ -74,10 +74,10 @@ export abstract class BaseDrizzleRecordAdapter<
     this.protectedColumns = ['contextCorrelationId', 'id', 'createdAt', 'updatedAt', ...additionalProtectedColumns]
   }
 
-  public abstract getValues(record: CredoRecord, agentContext?: AgentContext): DrizzleAdapterValues<SQLiteTable>
-  public getValuesWithBase(agentContext: AgentContext, record: CredoRecord) {
+  public abstract getValues(record: CredoRecord, agentContext?: AgentContext): Promise<DrizzleAdapterValues<SQLiteTable>>
+  public async getValuesWithBase(agentContext: AgentContext, record: CredoRecord) {
     return {
-      ...this.getValues(record, agentContext),
+      ...(await this.getValues(record, agentContext)),
 
       // Always store based on context correlation id
       contextCorrelationId: agentContext.contextCorrelationId,
@@ -89,19 +89,20 @@ export abstract class BaseDrizzleRecordAdapter<
     }
   }
 
-  private _toRecord(values: DrizzleAdapterRecordValues<SQLiteTable>, agentContext?: AgentContext): CredoRecord {
+  private async _toRecord(values: DrizzleAdapterRecordValues<SQLiteTable>, agentContext?: AgentContext): Promise<CredoRecord> {
     const filteredValues = Object.fromEntries(
       Object.entries(values).filter(([_key, value]) => value !== null)
     ) as DrizzleAdapterRecordValues<SQLiteTable>
 
-    return this.toRecord(filteredValues, agentContext)
+    return  await this.toRecord(filteredValues, agentContext)
   }
 
   public getModuleConfig(): DrizzleStorageModuleConfig | null {
     return this.config
   }
 
-  protected prepareValuesForDb(record: any, agentContext?: AgentContext): Record<string, any> {
+  // TODO: remove agentContext
+  protected async prepareValuesForDb(record: any, agentContext?: AgentContext): Promise<Record<string, any>> {
     if (!this.getModuleConfig()?.enableEncryption) {
       return record;
     }
@@ -113,24 +114,31 @@ export abstract class BaseDrizzleRecordAdapter<
 
     // Loop through every key in the record to prepare it for the DB
     for (const key in result) {
+      console.log("Processing key:", key);
       const rawValue = result[key];
+      console.log("Raw value:", rawValue);
       if (rawValue === undefined || rawValue === null) continue;
 
       const shouldEncrypt = columnsToEncrypt.includes(key) && !this.protectedColumns.includes(key);
 
       if (shouldEncrypt && encryptionKey) {
+        console.log("Encrypting value for key:", key);
         const stringValue = typeof rawValue === 'object' ? JSON.stringify(rawValue) : String(rawValue);
-        result[key] = encryptDataWithKey(stringValue, encryptionKey);
-      } else if (typeof rawValue === 'object' && !Array.isArray(rawValue)) {
-        // Only stringify if it's a plain object, let Arrays pass through 
-        // IF the DB expects an actual Array type.
-        result[key] = JSON.stringify(rawValue);
-      }
+        result[key] = await encryptDataWithKey(stringValue, encryptionKey);
+        console.log("Encrypted value for key:", key, "result:", result[key]);
+      } 
+      // This if statement is dangerous coz it stringyfies all the
+      // else if (typeof rawValue === 'object' || Array.isArray(rawValue)) {   
+      //   // Only stringify if it's a plain object, let Arrays pass through 
+      //   // IF the DB expects an actual Array type.
+      //   // TODO: I think we would need to encrypt array as well
+      //   result[key] = JSON.stringify(rawValue);
+      // }
     }
     return result;
   }
 
-  protected prepareRecordFromDb(values: Record<string, any>, agentContext?: AgentContext): Record<string, any> {
+  protected async prepareRecordFromDb(values: Record<string, any>, agentContext?: AgentContext): Promise<Record<string, any>> {
     const processed = { ...values };
     const columnsToEncrypt = this.columnsToBeEncrypted();
     const encryptionKey = (columnsToEncrypt.length > 0 && this.config.encryptionKey)
@@ -142,24 +150,26 @@ export abstract class BaseDrizzleRecordAdapter<
       if (typeof value !== 'string') continue;
 
       // 1. Decrypt if necessary
-      if (columnsToEncrypt.includes(key) && !this.protectedColumns.includes(key) && encryptionKey) {
+      if (typeof value === 'string' && columnsToEncrypt.includes(key) && !this.protectedColumns.includes(key) && encryptionKey) {
         try {
-          value = decryptDataWithKey(value, encryptionKey);
-        } catch (_e) {
-          console.error(`Decryption failed for ${key}`);
-        }
-      }
+          value = await decryptDataWithKey(value, encryptionKey);
 
-      // 2. Generic JSON Auto-Parse
-      // If the resulting string looks like JSON, parse it.
-      // This handles 'content' or any other JSON-blob column automatically.
-      if (value.startsWith('{') || value.startsWith('[')) {
-        try {
-          processed[key] = JSON.parse(value);
-        } catch {
-          processed[key] = value; // Not valid JSON after all, keep as string
+          // 2. If it was encrypted, it was definitely stringified. Try to parse it back.
+          if (typeof value === 'string' && (value.startsWith('{') || value.startsWith('['))) {
+            try {
+              processed[key] = JSON.parse(value);
+            } catch {
+              processed[key] = value;
+            }
+          } else {
+            processed[key] = value;
+          }
+        } catch (_e) {
+          console.error(`Decryption failed for key: ${key}`);
+          processed[key] = value;
         }
       } else {
+        // If not encrypted, keep value as is (driver might have already parsed JSON)
         processed[key] = value;
       }
     }
@@ -174,7 +184,7 @@ export abstract class BaseDrizzleRecordAdapter<
     return columnsToEncrypt
   }
 
-  public abstract toRecord(values: DrizzleAdapterRecordValues<SQLiteTable>, agentContext?: AgentContext): CredoRecord
+  public abstract toRecord(values: DrizzleAdapterRecordValues<SQLiteTable>, agentContext?: AgentContext): Promise<CredoRecord>
 
   public async query(agentContext: AgentContext, query?: Query<CredoRecord>, queryOptions?: QueryOptions) {
     try {
@@ -248,8 +258,10 @@ export abstract class BaseDrizzleRecordAdapter<
           result = result.reverse()
         }
 
-        return result.map(({ contextCorrelationId, ...item }) =>
-          this._toRecord(item as DrizzleAdapterRecordValues<PostgresTable>)
+        return await Promise.all(
+          result.map(async ({ contextCorrelationId, ...item }) =>
+            await this._toRecord(item as DrizzleAdapterRecordValues<PostgresTable>, agentContext)
+          )
         )
       }
 
@@ -325,8 +337,10 @@ export abstract class BaseDrizzleRecordAdapter<
           result = result.reverse()
         }
 
-        return result.map(({ contextCorrelationId, ...item }) =>
-          this._toRecord(item as DrizzleAdapterRecordValues<SQLiteTable>)
+        return await Promise.all(
+          result.map(async ({ contextCorrelationId, ...item }) =>
+            await this._toRecord(item as DrizzleAdapterRecordValues<SQLiteTable>, agentContext)
+          )
         )
       }
     } catch (error) {
@@ -368,7 +382,7 @@ export abstract class BaseDrizzleRecordAdapter<
 
         // biome-ignore lint/correctness/noUnusedVariables: no explanation
         const { contextCorrelationId, ...item } = result
-        return this._toRecord(item as DrizzleAdapterRecordValues<PostgresTable>, agentContext)
+        return await this._toRecord(item as DrizzleAdapterRecordValues<PostgresTable>, agentContext)
       }
 
       if (isDrizzleSqliteDatabase(this.database)) {
@@ -393,7 +407,7 @@ export abstract class BaseDrizzleRecordAdapter<
 
         // biome-ignore lint/correctness/noUnusedVariables: no explanation
         const { contextCorrelationId, ...item } = result
-        return this._toRecord(item as DrizzleAdapterRecordValues<SQLiteTable>, agentContext)
+        return await this._toRecord(item as DrizzleAdapterRecordValues<SQLiteTable>, agentContext)
       }
     } catch (error) {
       if (error instanceof CredoError) throw error

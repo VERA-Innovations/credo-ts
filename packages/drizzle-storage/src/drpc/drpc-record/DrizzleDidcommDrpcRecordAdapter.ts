@@ -1,4 +1,4 @@
-import { JsonTransformer, type TagsBase } from '@credo-ts/core'
+import { JsonTransformer, type TagsBase, type AgentContext } from '@credo-ts/core'
 import { DrpcRecord } from '@credo-ts/drpc'
 import { BaseDrizzleRecordAdapter } from '../../adapter/BaseDrizzleRecordAdapter'
 import type { DrizzleDatabase } from '../../DrizzleDatabase'
@@ -8,6 +8,7 @@ import type { DrizzleAdapterRecordValues } from '../../adapter/type'
 import type { DrizzleStorageModuleConfig } from '../../DrizzleStorageModuleConfig'
 
 type DrizzleDidcommDrpcAdapterValues = DrizzleAdapterRecordValues<(typeof sqlite)['didcommDrpc']>
+
 export class DrizzleDidcommDrpcRecordAdapter extends BaseDrizzleRecordAdapter<
   DrpcRecord,
   typeof postgres.didcommDrpc,
@@ -19,24 +20,37 @@ export class DrizzleDidcommDrpcRecordAdapter extends BaseDrizzleRecordAdapter<
     super(database, { postgres: postgres.didcommDrpc, sqlite: sqlite.didcommDrpc }, DrpcRecord, [], config)
   }
 
-  public getValues(record: DrpcRecord) {
+  public async getValues(record: DrpcRecord, agentContext?: AgentContext) {
     const { connectionId, threadId, ...customTags } = record.getTags()
 
-    return {
+    const rawValues = {
       threadId,
       connectionId,
       state: record.state,
       role: record.role,
       request: record.request,
       response: record.response,
-      customTags,
     }
+
+    // Await the asynchronous encryption/stringification logic
+    const processedValues = await this.prepareValuesForDb(rawValues, agentContext)
+
+    return {
+      ...processedValues,
+      customTags,
+    } as any
   }
 
-  public toRecord(values: DrizzleDidcommDrpcAdapterValues): DrpcRecord {
+  public async toRecord(
+    values: DrizzleDidcommDrpcAdapterValues,
+    agentContext?: AgentContext
+  ): Promise<DrpcRecord> {
     const { customTags, ...remainingValues } = values
 
-    const record = JsonTransformer.fromJSON(remainingValues, DrpcRecord)
+    // Await the asynchronous decryption/parsing logic
+    const decryptedValues = await this.prepareRecordFromDb(remainingValues, agentContext)
+
+    const record = JsonTransformer.fromJSON(decryptedValues, DrpcRecord)
     if (customTags) record.setTags(customTags as TagsBase)
 
     return record

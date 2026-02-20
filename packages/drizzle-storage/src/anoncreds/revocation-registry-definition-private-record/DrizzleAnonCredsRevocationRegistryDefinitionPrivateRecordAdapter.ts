@@ -1,5 +1,5 @@
 import { AnonCredsRevocationRegistryDefinitionPrivateRecord } from '@credo-ts/anoncreds'
-import { JsonTransformer, type TagsBase } from '@credo-ts/core'
+import { AgentContext, JsonTransformer, type TagsBase } from '@credo-ts/core'
 import { BaseDrizzleRecordAdapter } from '../../adapter/BaseDrizzleRecordAdapter'
 import type { DrizzleDatabase } from '../../DrizzleDatabase'
 import * as postgres from './postgres'
@@ -10,6 +10,7 @@ import type { DrizzleStorageModuleConfig } from '../../DrizzleStorageModuleConfi
 type DrizzleAnonCredsRevocationRegistryDefinitionPrivateAdapterValues = DrizzleAdapterRecordValues<
   (typeof sqlite)['anonCredsRevocationRegistryDefinitionPrivate']
 >
+
 export class DrizzleAnonCredsRevocationRegistryDefinitionPrivateRecordAdapter extends BaseDrizzleRecordAdapter<
   AnonCredsRevocationRegistryDefinitionPrivateRecord,
   typeof postgres.anonCredsRevocationRegistryDefinitionPrivate,
@@ -17,7 +18,7 @@ export class DrizzleAnonCredsRevocationRegistryDefinitionPrivateRecordAdapter ex
   typeof sqlite.anonCredsRevocationRegistryDefinitionPrivate,
   typeof sqlite
 > {
-  public constructor(database: DrizzleDatabase<typeof postgres, typeof sqlite>, public config: DrizzleStorageModuleConfig ) {
+  public constructor(database: DrizzleDatabase<typeof postgres, typeof sqlite>, public config: DrizzleStorageModuleConfig) {
     super(
       database,
       {
@@ -30,24 +31,35 @@ export class DrizzleAnonCredsRevocationRegistryDefinitionPrivateRecordAdapter ex
     )
   }
 
-  public getValues(record: AnonCredsRevocationRegistryDefinitionPrivateRecord) {
+  public async getValues(record: AnonCredsRevocationRegistryDefinitionPrivateRecord, agentContext?: AgentContext) {
     const { revocationRegistryDefinitionId, credentialDefinitionId, state, ...customTags } = record.getTags()
 
-    return {
+    const rawValues = {
       revocationRegistryDefinitionId,
       credentialDefinitionId,
       state,
       value: record.value,
-      customTags,
     }
+
+    // Await encryption/stringification
+    const processedValues = await this.prepareValuesForDb(rawValues, agentContext)
+
+    return {
+      ...processedValues,
+      customTags,
+    } as DrizzleAnonCredsRevocationRegistryDefinitionPrivateAdapterValues
   }
 
-  public toRecord(
-    values: DrizzleAnonCredsRevocationRegistryDefinitionPrivateAdapterValues
-  ): AnonCredsRevocationRegistryDefinitionPrivateRecord {
+  public async toRecord(
+    values: DrizzleAnonCredsRevocationRegistryDefinitionPrivateAdapterValues,
+    agentContext?: AgentContext
+  ): Promise<AnonCredsRevocationRegistryDefinitionPrivateRecord> {
     const { customTags, ...remainingValues } = values
 
-    const record = JsonTransformer.fromJSON(remainingValues, AnonCredsRevocationRegistryDefinitionPrivateRecord)
+    // Await decryption/parsing
+    const decryptedValues = await this.prepareRecordFromDb(remainingValues, agentContext)
+
+    const record = JsonTransformer.fromJSON(decryptedValues, AnonCredsRevocationRegistryDefinitionPrivateRecord)
     if (customTags) record.setTags(customTags as TagsBase)
 
     return record

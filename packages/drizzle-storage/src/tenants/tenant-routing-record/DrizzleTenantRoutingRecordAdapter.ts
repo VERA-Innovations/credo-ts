@@ -21,7 +21,7 @@ export class DrizzleTenantRoutingRecordAdapter extends BaseDrizzleRecordAdapter<
     super(database, { postgres: postgres.tenantRouting, sqlite: sqlite.tenantRouting }, TenantRoutingRecord, [], config)
   }
 
-  public getValues(record: TenantRoutingRecord): DrizzleAdapterValues<(typeof sqlite)['tenantRouting']> {
+  public async getValues(record: TenantRoutingRecord): Promise<DrizzleAdapterValues<(typeof sqlite)['tenantRouting']>> {
     const { recipientKeyFingerprint, tenantId, ...customTags } = record.getTags()
 
     return {
@@ -31,7 +31,7 @@ export class DrizzleTenantRoutingRecordAdapter extends BaseDrizzleRecordAdapter<
     }
   }
 
-  public toRecord(values: DrizzleTenantRoutingAdapterValues): TenantRoutingRecord {
+  public async toRecord(values: DrizzleTenantRoutingAdapterValues): Promise<TenantRoutingRecord> {
     const { customTags, ...remainingValues } = values
 
     const record = JsonTransformer.fromJSON(remainingValues, TenantRoutingRecord)

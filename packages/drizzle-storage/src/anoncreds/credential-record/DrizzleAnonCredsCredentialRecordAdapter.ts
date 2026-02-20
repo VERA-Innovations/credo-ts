@@ -1,5 +1,5 @@
 import { AnonCredsCredentialRecord } from '@credo-ts/anoncreds'
-import { JsonTransformer, type TagsBase } from '@credo-ts/core'
+import { AgentContext, JsonTransformer, type TagsBase } from '@credo-ts/core'
 import { BaseDrizzleRecordAdapter } from '../../adapter/BaseDrizzleRecordAdapter'
 import type { DrizzleDatabase } from '../../DrizzleDatabase'
 import * as postgres from './postgres'
@@ -8,6 +8,7 @@ import type { DrizzleAdapterRecordValues } from '../../adapter/type'
 import type { DrizzleStorageModuleConfig } from '../../DrizzleStorageModuleConfig'
 
 type DrizzleAnonCredsCredentialAdapterValues = DrizzleAdapterRecordValues<(typeof sqlite)['anonCredsCredential']>
+
 export class DrizzleAnonCredsCredentialRecordAdapter extends BaseDrizzleRecordAdapter<
   AnonCredsCredentialRecord,
   typeof postgres.anonCredsCredential,
@@ -19,11 +20,13 @@ export class DrizzleAnonCredsCredentialRecordAdapter extends BaseDrizzleRecordAd
     super(
       database,
       { postgres: postgres.anonCredsCredential, sqlite: sqlite.anonCredsCredential },
-      AnonCredsCredentialRecord, [], config
+      AnonCredsCredentialRecord,
+      [],
+      config
     )
   }
 
-  public getValues(record: AnonCredsCredentialRecord) {
+  public async getValues(record: AnonCredsCredentialRecord, agentContext?: AgentContext) {
     const {
       credentialId,
       linkSecretId,
@@ -42,7 +45,7 @@ export class DrizzleAnonCredsCredentialRecordAdapter extends BaseDrizzleRecordAd
     // biome-ignore lint/correctness/noUnusedVariables: no explanation
     const { schema_id, cred_def_id, rev_reg_id, ...credentialRest } = record.credential
 
-    return {
+    const rawValues = {
       credentialId,
       credentialRevocationId,
       linkSecretId,
@@ -57,12 +60,18 @@ export class DrizzleAnonCredsCredentialRecordAdapter extends BaseDrizzleRecordAd
       schemaVersion,
       schemaIssuerId,
       issuerId,
-
-      customTags,
     }
+
+    // Process for encryption/stringification
+    const processedValues = await this.prepareValuesForDb(rawValues, agentContext)
+
+    return {
+      ...processedValues,
+      customTags: customTags as any,
+    } as any
   }
 
-  public toRecord(values: DrizzleAnonCredsCredentialAdapterValues): AnonCredsCredentialRecord {
+  public async toRecord(values: DrizzleAnonCredsCredentialAdapterValues, agentContext?: AgentContext): Promise<AnonCredsCredentialRecord> {
     const {
       customTags,
       schemaId,
@@ -75,11 +84,14 @@ export class DrizzleAnonCredsCredentialRecordAdapter extends BaseDrizzleRecordAd
       ...remainingValues
     } = values
 
+    // Decrypt and parse values from DB
+    const decryptedValues = await this.prepareRecordFromDb(remainingValues, agentContext)
+
     const record = JsonTransformer.fromJSON(
       {
-        ...remainingValues,
+        ...decryptedValues,
         credential: {
-          ...remainingValues.credential,
+          ...decryptedValues.credential,
           schema_id: schemaId,
           cred_def_id: credentialDefinitionId,
           rev_reg_id: revocationRegistryId,
@@ -87,7 +99,14 @@ export class DrizzleAnonCredsCredentialRecordAdapter extends BaseDrizzleRecordAd
       },
       AnonCredsCredentialRecord
     )
-    record.setTags({ ...customTags, schemaName, schemaVersion, schemaIssuerId, issuerId } as TagsBase)
+
+    record.setTags({
+      ...customTags,
+      schemaName,
+      schemaVersion,
+      schemaIssuerId,
+      issuerId
+    } as TagsBase)
 
     return record
   }

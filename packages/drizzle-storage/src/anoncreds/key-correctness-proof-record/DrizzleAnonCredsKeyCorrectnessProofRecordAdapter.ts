@@ -1,5 +1,5 @@
 import { AnonCredsKeyCorrectnessProofRecord } from '@credo-ts/anoncreds'
-import { JsonTransformer, type TagsBase } from '@credo-ts/core'
+import { AgentContext, JsonTransformer, type TagsBase } from '@credo-ts/core'
 import { BaseDrizzleRecordAdapter } from '../../adapter/BaseDrizzleRecordAdapter'
 import type { DrizzleDatabase } from '../../DrizzleDatabase'
 import * as postgres from './postgres'
@@ -25,20 +25,33 @@ export class DrizzleAnonCredsKeyCorrectnessProofRecordAdapter extends BaseDrizzl
     )
   }
 
-  public getValues(record: AnonCredsKeyCorrectnessProofRecord) {
+  public async getValues(record: AnonCredsKeyCorrectnessProofRecord, agentContext?: AgentContext) {
     const { credentialDefinitionId, ...customTags } = record.getTags()
 
-    return {
+    const rawValues = {
       credentialDefinitionId,
       value: record.value,
-      customTags,
     }
+
+    // Await the asynchronous encryption/stringification logic
+    const processedValues = await this.prepareValuesForDb(rawValues, agentContext)
+
+    return {
+      ...processedValues,
+      customTags,
+    } as DrizzleAnonCredsKeyCorrectnessProofAdapterValues
   }
 
-  public toRecord(values: DrizzleAnonCredsKeyCorrectnessProofAdapterValues): AnonCredsKeyCorrectnessProofRecord {
+  public async toRecord(
+    values: DrizzleAnonCredsKeyCorrectnessProofAdapterValues,
+    agentContext?: AgentContext
+  ): Promise<AnonCredsKeyCorrectnessProofRecord> {
     const { customTags, credentialDefinitionId, ...remainingValues } = values
 
-    const record = JsonTransformer.fromJSON(remainingValues, AnonCredsKeyCorrectnessProofRecord)
+    // Await the asynchronous decryption/parsing logic
+    const decryptedValues = await this.prepareRecordFromDb(remainingValues, agentContext)
+
+    const record = JsonTransformer.fromJSON(decryptedValues, AnonCredsKeyCorrectnessProofRecord)
     record.setTags({ ...customTags, credentialDefinitionId } as TagsBase)
 
     return record

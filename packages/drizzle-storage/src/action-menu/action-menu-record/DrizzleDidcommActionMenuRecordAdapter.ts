@@ -19,7 +19,7 @@ export class DrizzleDidcommActionMenuRecordAdapter extends BaseDrizzleRecordAdap
     super(database, { postgres: postgres.didcommActionMenu, sqlite: sqlite.didcommActionMenu }, ActionMenuRecord, [], config)
   }
 
-  public getValues(record: ActionMenuRecord, agentContext?: AgentContext) {
+  public async getValues(record: ActionMenuRecord, agentContext?: AgentContext) {
     const { role, connectionId, threadId, ...customTags } = record.getTags()
     // If encryption enabled, create migration for those packages
 
@@ -35,17 +35,17 @@ export class DrizzleDidcommActionMenuRecordAdapter extends BaseDrizzleRecordAdap
       customTags,
     }
 
-    const processedValues = this.prepareValuesForDb(rawValues, agentContext)
+    const processedValues = await this.prepareValuesForDb(rawValues, agentContext)
     return {
       ...processedValues,
-      customTags: customTags as any,
-    } as any
+      customTags: customTags,
+    } as DrizzleDidcommActionMenuAdapterValues
   }
 
-  public toRecord(values: DrizzleDidcommActionMenuAdapterValues, agentContext?: AgentContext): ActionMenuRecord {
+  public async toRecord(values: DrizzleDidcommActionMenuAdapterValues, agentContext?: AgentContext): Promise<ActionMenuRecord> {
     const { customTags, ...remainingValues } = values
 
-    const decryptedValues = this.prepareRecordFromDb(remainingValues, agentContext)
+    const decryptedValues = await this.prepareRecordFromDb(remainingValues, agentContext)
     
     const record = JsonTransformer.fromJSON(decryptedValues, ActionMenuRecord)
     if (customTags) record.setTags(customTags as TagsBase)

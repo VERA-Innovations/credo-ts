@@ -1,4 +1,4 @@
-import { type JsonObject, JsonTransformer, type TagsBase } from '@credo-ts/core'
+import { type JsonObject, JsonTransformer, type TagsBase, type AgentContext } from '@credo-ts/core'
 import { DidCommCredentialExchangeRecord } from '@credo-ts/didcomm'
 import {
   BaseDrizzleRecordAdapter
@@ -6,12 +6,13 @@ import {
 import type { DrizzleDatabase } from '../../DrizzleDatabase'
 import * as postgres from './postgres'
 import * as sqlite from './sqlite'
-import type { DrizzleAdapterRecordValues, DrizzleAdapterValues } from '../../adapter'
+import type { DrizzleAdapterRecordValues } from '../../adapter'
 import type { DrizzleStorageModuleConfig } from '../../DrizzleStorageModuleConfig'
 
 type DrizzleDidcommCredentialExchangeAdapterValues = DrizzleAdapterRecordValues<
   (typeof sqlite)['didcommCredentialExchange']
 >
+
 export class DrizzleDidcommCredentialExchangeRecordAdapter extends BaseDrizzleRecordAdapter<
   DidCommCredentialExchangeRecord,
   typeof postgres.didcommCredentialExchange,
@@ -29,12 +30,13 @@ export class DrizzleDidcommCredentialExchangeRecordAdapter extends BaseDrizzleRe
     )
   }
 
-  public getValues(
-    record: DidCommCredentialExchangeRecord
-  ): DrizzleAdapterValues<(typeof sqlite)['didcommCredentialExchange']> {
+  public async getValues(
+    record: DidCommCredentialExchangeRecord,
+    agentContext?: AgentContext
+  ) {
     const { connectionId, threadId, parentThreadId, state, role, credentialIds, ...customTags } = record.getTags()
 
-    return {
+    const rawValues = {
       connectionId,
       threadId,
       parentThreadId,
@@ -47,16 +49,28 @@ export class DrizzleDidcommCredentialExchangeRecordAdapter extends BaseDrizzleRe
       credentials: record.credentials,
       credentialIds,
       credentialAttributes: JsonTransformer.toJSON(record.credentialAttributes) as JsonObject[],
-
-      customTags,
     }
+
+    // Await the asynchronous encryption/stringification logic
+    const processedValues = await this.prepareValuesForDb(rawValues, agentContext)
+
+    return {
+      ...processedValues,
+      customTags,
+    } as any
   }
 
-  public toRecord(values: DrizzleDidcommCredentialExchangeAdapterValues): DidCommCredentialExchangeRecord {
-    // biome-ignore lint/correctness/noUnusedVariables: no explanation
+  public async toRecord(
+    values: DrizzleDidcommCredentialExchangeAdapterValues,
+    agentContext?: AgentContext
+  ): Promise<DidCommCredentialExchangeRecord> {
+    // biome-ignore lint/correctness/noUnusedVariables: <explanation>
     const { customTags, credentialIds, ...remainingValues } = values
 
-    const record = JsonTransformer.fromJSON(remainingValues, DidCommCredentialExchangeRecord)
+    // Await the asynchronous decryption/parsing logic
+    const decryptedValues = await this.prepareRecordFromDb(remainingValues, agentContext)
+
+    const record = JsonTransformer.fromJSON(decryptedValues, DidCommCredentialExchangeRecord)
     record.setTags(customTags as TagsBase)
 
     return record

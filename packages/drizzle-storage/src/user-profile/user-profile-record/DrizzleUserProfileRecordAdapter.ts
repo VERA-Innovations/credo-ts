@@ -1,5 +1,5 @@
 import { UserProfileRecord } from '@2060.io/credo-ts-didcomm-user-profile'
-import { JsonTransformer, type TagsBase } from '@credo-ts/core'
+import { JsonTransformer, type TagsBase, type AgentContext } from '@credo-ts/core'
 import { type DrizzleAdapterRecordValues } from '../../adapter'
 import type { DrizzleDatabase } from '../../DrizzleDatabase'
 import * as postgres from './postgres'
@@ -22,10 +22,10 @@ export class DrizzleUserProfileRecordAdapter extends BaseDrizzleRecordAdapter<
     super(database, { postgres: postgres.userProfile, sqlite: sqlite.userProfile }, UserProfileRecord, [], config)
   }
 
-  public getValues(record: UserProfileRecord) {
+  public async getValues(record: UserProfileRecord, agentContext?: AgentContext) {
     const { displayName, preferredLanguage, ...customTags } = record.getTags()
 
-    return {
+    const rawValues = {
       displayName: typeof displayName === 'string' ? displayName : undefined,
       description: record.description ?? null,
       preferredLanguage: typeof preferredLanguage === 'string' ? preferredLanguage : undefined,
@@ -35,15 +35,27 @@ export class DrizzleUserProfileRecordAdapter extends BaseDrizzleRecordAdapter<
       displayIcon: record.displayIcon ? JsonTransformer.toJSON(record.displayIcon) : null,
 
       metadata: record.metadata ? JsonTransformer.toJSON(record.metadata) : null,
-
-      customTags,
     }
+
+    // Await the asynchronous encryption/stringification logic
+    const processedValues = await this.prepareValuesForDb(rawValues, agentContext)
+
+    return {
+      ...processedValues,
+      customTags,
+    } as any
   }
 
-  public toRecord(values: DrizzleUserProfileAdapterValues): UserProfileRecord {
+  public async toRecord(
+    values: DrizzleUserProfileAdapterValues,
+    agentContext?: AgentContext
+  ): Promise<UserProfileRecord> {
     const { customTags, ...recordValues } = values
 
-    const record = JsonTransformer.fromJSON(recordValues, UserProfileRecord)
+    // Await the asynchronous decryption/parsing logic
+    const decryptedValues = await this.prepareRecordFromDb(recordValues, agentContext)
+
+    const record = JsonTransformer.fromJSON(decryptedValues, UserProfileRecord)
 
     if (customTags) {
       record.setTags(customTags as TagsBase)

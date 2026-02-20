@@ -20,7 +20,7 @@ export class DrizzleDidcommConnectionRecordAdapter extends BaseDrizzleRecordAdap
     super(database, { postgres: postgres.didcommConnection, sqlite: sqlite.didcommConnection }, DidCommConnectionRecord, [], config)
   }
 
-  public getValues(record: DidCommConnectionRecord, agentContext?: AgentContext) {
+  public async getValues(record: DidCommConnectionRecord, agentContext?: AgentContext) {
     const {
       state,
       role,
@@ -57,10 +57,8 @@ export class DrizzleDidcommConnectionRecordAdapter extends BaseDrizzleRecordAdap
       protocol: record.protocol,
     }
 
-    // We'll let the base class handle dynamic encryption and object-to-string conversion
-    const processedValues = this.prepareValuesForDb(rawValues, agentContext)
-    // Triage: do we need t transform the processed values afterwards?
-    // Answer: No need, coz initially also we return the mapped values directly
+    // Await the asynchronous encryption and stringification
+    const processedValues = await this.prepareValuesForDb(rawValues, agentContext)
 
     return {
       ...processedValues,
@@ -68,13 +66,16 @@ export class DrizzleDidcommConnectionRecordAdapter extends BaseDrizzleRecordAdap
     } as any
   }
 
-  public toRecord(values: DrizzleDidcommConnectionAdapterValues, agentContext?: AgentContext): DidCommConnectionRecord {
+  public async toRecord(
+    values: DrizzleDidcommConnectionAdapterValues,
+    agentContext?: AgentContext
+  ): Promise<DidCommConnectionRecord> {
     const { customTags, ...remainingValues } = values
 
-    // 1. Let the base class handle dynamic decryption and string-to-object parsing
-    const decryptedValues = this.prepareRecordFromDb(remainingValues, agentContext)
+    // Await the asynchronous decryption and parsing
+    const decryptedValues = await this.prepareRecordFromDb(remainingValues, agentContext)
 
-    // 2. Instantiate the record with processed values
+    // Instantiate the record with processed values
     const record = JsonTransformer.fromJSON(decryptedValues, DidCommConnectionRecord)
     record.setTags(customTags as TagsBase)
 

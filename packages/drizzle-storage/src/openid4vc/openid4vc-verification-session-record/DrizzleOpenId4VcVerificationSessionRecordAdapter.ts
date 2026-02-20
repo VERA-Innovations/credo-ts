@@ -1,4 +1,4 @@
-import { JsonTransformer, type TagsBase } from '@credo-ts/core'
+import { JsonTransformer, type TagsBase, type AgentContext } from '@credo-ts/core'
 
 import { OpenId4VcVerificationSessionRecord } from '@credo-ts/openid4vc'
 import {
@@ -7,12 +7,13 @@ import {
 import type { DrizzleDatabase } from '../../DrizzleDatabase'
 import * as postgres from './postgres'
 import * as sqlite from './sqlite'
-import type { DrizzleAdapterRecordValues, DrizzleAdapterValues } from '../../adapter/type'
+import type { DrizzleAdapterRecordValues } from '../../adapter/type'
 import type { DrizzleStorageModuleConfig } from '../../DrizzleStorageModuleConfig'
 
 type DrizzleOpenId4VcVerificationSessionAdapterValues = DrizzleAdapterRecordValues<
   (typeof sqlite)['openId4VcVerificationSession']
 >
+
 export class DrizzleOpenId4VcVerificationSessionRecordAdapter extends BaseDrizzleRecordAdapter<
   OpenId4VcVerificationSessionRecord,
   typeof postgres.openId4VcVerificationSession,
@@ -30,13 +31,14 @@ export class DrizzleOpenId4VcVerificationSessionRecordAdapter extends BaseDrizzl
     )
   }
 
-  public getValues(
-    record: OpenId4VcVerificationSessionRecord
-  ): DrizzleAdapterValues<(typeof sqlite)['openId4VcVerificationSession']> {
+  public async getValues(
+    record: OpenId4VcVerificationSessionRecord,
+    agentContext?: AgentContext
+  ) {
     const { authorizationRequestId, authorizationRequestUri, nonce, payloadState, state, verifierId, ...customTags } =
       record.getTags()
 
-    return {
+    const rawValues = {
       authorizationRequestJwt: record.authorizationRequestJwt,
       authorizationRequestPayload: record.authorizationRequestPayload,
       authorizationResponsePayload: record.authorizationResponsePayload,
@@ -50,15 +52,28 @@ export class DrizzleOpenId4VcVerificationSessionRecordAdapter extends BaseDrizzl
       payloadState,
       state,
       verifierId,
-      customTags,
     }
+
+    // Await the asynchronous encryption/stringification logic
+    const processedValues = await this.prepareValuesForDb(rawValues, agentContext)
+
+    return {
+      ...processedValues,
+      customTags,
+    } as any
   }
 
-  public toRecord(values: DrizzleOpenId4VcVerificationSessionAdapterValues): OpenId4VcVerificationSessionRecord {
+  public async toRecord(
+    values: DrizzleOpenId4VcVerificationSessionAdapterValues,
+    agentContext?: AgentContext
+  ): Promise<OpenId4VcVerificationSessionRecord> {
     // biome-ignore lint/correctness/noUnusedVariables: no explanation
     const { customTags, nonce, payloadState, ...remainingValues } = values
 
-    const record = JsonTransformer.fromJSON(remainingValues, OpenId4VcVerificationSessionRecord)
+    // Await the asynchronous decryption/parsing logic
+    const decryptedValues = await this.prepareRecordFromDb(remainingValues, agentContext)
+
+    const record = JsonTransformer.fromJSON(decryptedValues, OpenId4VcVerificationSessionRecord)
     if (customTags) record.setTags(customTags as TagsBase)
 
     return record

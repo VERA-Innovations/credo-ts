@@ -1,4 +1,4 @@
-import { JsonTransformer } from '@credo-ts/core'
+import { JsonTransformer, type TagsBase, type AgentContext } from '@credo-ts/core'
 import { DidCommOutOfBandRecord } from '@credo-ts/didcomm'
 import {
   BaseDrizzleRecordAdapter
@@ -6,10 +6,11 @@ import {
 import type { DrizzleDatabase } from '../../DrizzleDatabase'
 import * as postgres from './postgres'
 import * as sqlite from './sqlite'
-import type { DrizzleAdapterRecordValues, DrizzleAdapterValues } from '../../adapter/type'
+import type { DrizzleAdapterRecordValues } from '../../adapter/type'
 import type { DrizzleStorageModuleConfig } from '../../DrizzleStorageModuleConfig'
 
 type DrizzleDidcommOutOfBandAdapterValues = DrizzleAdapterRecordValues<(typeof sqlite)['didcommOutOfBand']>
+
 export class DrizzleDidcommOutOfBandRecordAdapter extends BaseDrizzleRecordAdapter<
   DidCommOutOfBandRecord,
   typeof postgres.didcommOutOfBand,
@@ -25,7 +26,7 @@ export class DrizzleDidcommOutOfBandRecordAdapter extends BaseDrizzleRecordAdapt
     invitationId: ['outOfBandInvitation', '@id'],
   } as const
 
-  public getValues(record: DidCommOutOfBandRecord): DrizzleAdapterValues<(typeof sqlite)['didcommOutOfBand']> {
+  public async getValues(record: DidCommOutOfBandRecord, agentContext?: AgentContext): Promise<DrizzleDidcommOutOfBandAdapterValues> {
     const {
       invitationRequestsThreadIds,
       recipientKeyFingerprints,
@@ -41,7 +42,7 @@ export class DrizzleDidcommOutOfBandRecordAdapter extends BaseDrizzleRecordAdapt
       ...customTags
     } = record.getTags()
 
-    return {
+    const rawValues = {
       invitationRequestsThreadIds,
       role,
       state,
@@ -57,12 +58,21 @@ export class DrizzleDidcommOutOfBandRecordAdapter extends BaseDrizzleRecordAdapt
       invitationInlineServiceKeys: record.invitationInlineServiceKeys,
       mediatorId: record.mediatorId,
       reuseConnectionId: record.reuseConnectionId,
-
-      customTags,
     }
+
+    // Await the asynchronous encryption/stringification logic
+    const processedValues = await this.prepareValuesForDb(rawValues, agentContext)
+
+    return {
+      ...processedValues,
+      customTags,
+    } as any
   }
 
-  public toRecord(values: DrizzleDidcommOutOfBandAdapterValues): DidCommOutOfBandRecord {
+  public async toRecord(
+    values: DrizzleDidcommOutOfBandAdapterValues,
+    agentContext?: AgentContext
+  ): Promise<DidCommOutOfBandRecord> {
     const {
       customTags,
       recipientKeyFingerprints,
@@ -74,9 +84,12 @@ export class DrizzleDidcommOutOfBandRecordAdapter extends BaseDrizzleRecordAdapt
       ...remainingValues
     } = values
 
-    const record = JsonTransformer.fromJSON(remainingValues, DidCommOutOfBandRecord)
+    // Await the asynchronous decryption/parsing logic
+    const decryptedValues = await this.prepareRecordFromDb(remainingValues, agentContext)
+
+    const record = JsonTransformer.fromJSON(decryptedValues, DidCommOutOfBandRecord)
     record.setTags({
-      ...customTags,
+      ...(customTags as TagsBase),
       recipientKeyFingerprints: recipientKeyFingerprints ?? undefined,
       recipientRoutingKeyFingerprint: recipientRoutingKeyFingerprint ?? undefined,
     })
