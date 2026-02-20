@@ -8,6 +8,13 @@
       "when": 1770300355684,
       "tag": "0000_tricky_toad",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1771595349072,
+      "tag": "0001_sweet_valeria_richards",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,1 @@
+ALTER TABLE "Tenant" ALTER COLUMN "config" SET DATA TYPE text;

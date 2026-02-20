@@ -4,7 +4,7 @@ import type {
   ActionMenuSelectionOptions,
   ActionMenuState,
 } from '@credo-ts/action-menu'
-import { foreignKey, jsonb, pgEnum, pgTable, text, unique } from 'drizzle-orm/pg-core'
+import { foreignKey, pgEnum, pgTable, text, unique } from 'drizzle-orm/pg-core'
 import { didcommConnection } from '../../didcomm/connection-record/postgres'
 import { getPostgresBaseRecordTable, postgresBaseRecordIndexes } from '../../postgres/baseRecord'
 import { exhaustiveArray } from '../../util'
@@ -29,8 +29,8 @@ export const didcommActionMenu = pgTable(
     connectionId: text('connection_id').notNull(),
     threadId: text('thread_id').notNull(),
 
-    menu: text('menu'),
-    performedAction: text('performed_action'),
+    menu: text('menu').$type<ActionMenuOptions>(),
+    performedAction: text('performed_action').$type<ActionMenuSelectionOptions>(),
   },
   (table) => [
     ...postgresBaseRecordIndexes(table, 'didcommActionMenu'),

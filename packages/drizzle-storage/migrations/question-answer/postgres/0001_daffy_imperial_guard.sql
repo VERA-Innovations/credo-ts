@@ -1,0 +1,1 @@
+ALTER TABLE "DidcommQuestionAnswer" ALTER COLUMN "valid_responses" SET DATA TYPE text;

@@ -8,6 +8,13 @@
       "when": 1769872716101,
       "tag": "0000_robust_madame_web",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1771595347789,
+      "tag": "0001_whole_wallop",
+      "breakpoints": true
     }
   ]
 }

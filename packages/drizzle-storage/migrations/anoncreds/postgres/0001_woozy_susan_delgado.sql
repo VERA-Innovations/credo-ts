@@ -1,0 +1,1 @@
+ALTER TABLE "AnonCredsCredential" ALTER COLUMN "credential" SET DATA TYPE text;

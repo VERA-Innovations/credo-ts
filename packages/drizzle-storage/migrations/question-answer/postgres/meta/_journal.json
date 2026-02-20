@@ -8,6 +8,13 @@
       "when": 1758141124623,
       "tag": "0000_initial",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1771595344414,
+      "tag": "0001_daffy_imperial_guard",
+      "breakpoints": true
     }
   ]
 }

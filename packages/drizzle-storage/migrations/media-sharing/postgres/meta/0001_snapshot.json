@@ -1,0 +1,183 @@
+{
+  "id": "b57b54c8-5447-46f3-b3e8-57a41f203f42",
+  "prevId": "f7bc8e2d-831d-48d9-8c85-356f298df0d0",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.DidcommMediaSharing": {
+      "name": "DidcommMediaSharing",
+      "schema": "",
+      "columns": {
+        "context_correlation_id": {
+          "name": "context_correlation_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp (3) with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp (3) with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "custom_tags": {
+          "name": "custom_tags",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sent_time": {
+          "name": "sent_time",
+          "type": "timestamp (3) with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "state": {
+          "name": "state",
+          "type": "DidcommMediaSharingState",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role": {
+          "name": "role",
+          "type": "DidcommMediaSharingRole",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "connection_id": {
+          "name": "connection_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "thread_id": {
+          "name": "thread_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "parent_thread_id": {
+          "name": "parent_thread_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "items": {
+          "name": "items",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "didcommMediaSharing_fk_context": {
+          "name": "didcommMediaSharing_fk_context",
+          "tableFrom": "DidcommMediaSharing",
+          "tableTo": "Context",
+          "columnsFrom": [
+            "context_correlation_id"
+          ],
+          "columnsTo": [
+            "context_correlation_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "DidcommMediaSharing_connection_id_context_correlation_id_DidcommConnection_id_context_correlation_id_fk": {
+          "name": "DidcommMediaSharing_connection_id_context_correlation_id_DidcommConnection_id_context_correlation_id_fk",
+          "tableFrom": "DidcommMediaSharing",
+          "tableTo": "DidcommConnection",
+          "columnsFrom": [
+            "connection_id",
+            "context_correlation_id"
+          ],
+          "columnsTo": [
+            "id",
+            "context_correlation_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "didcommMediaSharing_pk": {
+          "name": "didcommMediaSharing_pk",
+          "columns": [
+            "context_correlation_id",
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {
+        "DidcommMediaSharing_context_correlation_id_thread_id_unique": {
+          "name": "DidcommMediaSharing_context_correlation_id_thread_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "context_correlation_id",
+            "thread_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.DidcommMediaSharingRole": {
+      "name": "DidcommMediaSharingRole",
+      "schema": "public",
+      "values": [
+        "sender",
+        "receiver"
+      ]
+    },
+    "public.DidcommMediaSharingState": {
+      "name": "DidcommMediaSharingState",
+      "schema": "public",
+      "values": [
+        "init",
+        "media-requested",
+        "media-shared",
+        "done"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

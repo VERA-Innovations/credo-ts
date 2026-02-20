@@ -1,0 +1,1 @@
+ALTER TABLE "DidcommPrivateMediaSharing" ALTER COLUMN "items" SET DATA TYPE text;
