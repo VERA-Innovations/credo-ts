@@ -22,7 +22,7 @@ export const didcommOutOfBand = pgTable(
   {
     ...getPostgresBaseRecordTable(),
 
-    outOfBandInvitation: text('out_of_band_invitation').$type<DidCommPlaintextMessage>().notNull(),
+    outOfBandInvitation: jsonb('out_of_band_invitation').$type<DidCommPlaintextMessage>().notNull(),
     role: didcommOutOfBandRoleEnum().notNull(),
     state: didcommOutOfBandStateEnum().notNull(),
     alias: text(),

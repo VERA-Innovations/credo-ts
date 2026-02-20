@@ -846,7 +846,7 @@
         },
         "out_of_band_invitation": {
           "name": "out_of_band_invitation",
-          "type": "text",
+          "type": "jsonb",
           "primaryKey": false,
           "notNull": true
         },
