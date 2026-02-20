@@ -1,4 +1,4 @@
-import { jsonb, pgTable, text, unique } from 'drizzle-orm/pg-core'
+import { pgTable, text, unique } from 'drizzle-orm/pg-core'
 import { getPostgresBaseRecordTable, postgresBaseRecordIndexes } from '../../postgres'
 import type { PrivateMediaItem } from '../PrivateMediaTypes'
 
@@ -18,7 +18,7 @@ export const didcommPrivateMediaSharing = pgTable(
     parentThreadId: text('parent_thread_id'),
 
     /** Media items (encrypted or plain depending on ciphering info) */
-    items: jsonb('items').$type<PrivateMediaItem[]>(),
+    items: text('items').$type<PrivateMediaItem[]>(),
 
     /** Versioning for optimistic updates / migrations */
     version: text('version'),

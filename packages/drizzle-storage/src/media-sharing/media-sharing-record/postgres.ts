@@ -3,7 +3,7 @@ import type {
   DidCommMediaSharingState,
   SharedMediaItem,
 } from '@2060.io/credo-ts-didcomm-media-sharing'
-import { foreignKey, jsonb, pgEnum, pgTable, text, timestamp, unique } from 'drizzle-orm/pg-core'
+import { foreignKey, pgEnum, pgTable, text, timestamp, unique } from 'drizzle-orm/pg-core'
 import { didcommConnection } from '../../didcomm/postgres'
 import { getPostgresBaseRecordTable, postgresBaseRecordIndexes } from '../../postgres'
 import { exhaustiveArray } from '../../util'
@@ -38,7 +38,7 @@ export const didcommMediaSharing = pgTable(
     parentThreadId: text('parent_thread_id'),
     description: text('description'),
 
-    items: jsonb('items').$type<SharedMediaItem[]>(),
+    items: text('items').$type<SharedMediaItem[]>(),
   },
   (table) => [
     ...postgresBaseRecordIndexes(table, 'didcommMediaSharing'),

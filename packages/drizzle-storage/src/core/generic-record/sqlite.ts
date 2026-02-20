@@ -6,7 +6,7 @@ export const genericRecord = sqliteTable(
   {
     ...getSqliteBaseRecordTable(),
 
-    content: text({ mode: 'json' }).notNull().$type<Record<string, unknown>>(),
+    content: text('content').notNull().$type<Record<string, unknown>>(),
   },
   (table) => sqliteBaseRecordIndexes(table, 'genericRecord')
 )

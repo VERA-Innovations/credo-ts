@@ -1,5 +1,5 @@
 import type { QuestionAnswerRole, QuestionAnswerState, ValidResponse } from '@credo-ts/question-answer'
-import { boolean, foreignKey, jsonb, pgEnum, pgTable, text, unique } from 'drizzle-orm/pg-core'
+import { boolean, foreignKey, pgEnum, pgTable, text, unique } from 'drizzle-orm/pg-core'
 import { didcommConnection } from '../../didcomm/connection-record/postgres'
 import { getPostgresBaseRecordTable, postgresBaseRecordIndexes } from '../../postgres/baseRecord'
 import { exhaustiveArray } from '../../util'
@@ -29,7 +29,7 @@ export const didcommQuestionAnswer = pgTable(
 
     questionText: text('question_text').notNull(),
     questionDetail: text('question_detail'),
-    validResponses: jsonb('valid_responses').notNull().$type<ValidResponse[]>(),
+    validResponses: text('valid_responses').notNull().$type<ValidResponse[]>(),
     signatureRequired: boolean('signature_required').notNull(),
     response: text(),
   },

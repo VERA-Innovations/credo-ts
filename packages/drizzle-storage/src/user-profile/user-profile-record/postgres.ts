@@ -1,4 +1,4 @@
-import { jsonb, pgTable, text } from 'drizzle-orm/pg-core'
+import { pgTable, text } from 'drizzle-orm/pg-core'
 import { getPostgresBaseRecordTable, postgresBaseRecordIndexes } from '../../postgres'
 
 /**
@@ -13,8 +13,8 @@ export const userProfile = pgTable(
     description: text('description'),
     preferredLanguage: text('preferred_language'),
 
-    displayPicture: jsonb('display_picture').$type<Record<string, unknown> | undefined>(),
-    displayIcon: jsonb('display_icon').$type<Record<string, unknown> | undefined>(),
+    displayPicture: text('display_picture').$type<Record<string, unknown> | undefined>(),
+    displayIcon: text('display_icon').$type<Record<string, unknown> | undefined>(),
   },
   (table) => [...postgresBaseRecordIndexes(table, 'userProfile')]
 )

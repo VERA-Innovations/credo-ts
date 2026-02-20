@@ -8,7 +8,7 @@ export const w3cCredential = sqliteTable(
     ...getSqliteBaseRecordTable(),
 
     // JWT vc is string, JSON-LD vc is object
-    credentialInstances: text('credential_instances', { mode: 'json' }).$type<W3cCredentialRecordInstances>().notNull(),
+    credentialInstances: text('credential_instances').$type<W3cCredentialRecordInstances>().notNull(),
 
     // Default Tags
     issuerId: text('issuer_id').notNull(),

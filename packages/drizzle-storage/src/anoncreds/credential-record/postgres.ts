@@ -1,5 +1,5 @@
 import type { AnonCredsCredential } from '@credo-ts/anoncreds'
-import { jsonb, pgTable, text } from 'drizzle-orm/pg-core'
+import { pgTable, text } from 'drizzle-orm/pg-core'
 import { getPostgresBaseRecordTable, postgresBaseRecordIndexes } from '../../postgres/baseRecord'
 
 export const anonCredsCredential = pgTable(
@@ -10,7 +10,7 @@ export const anonCredsCredential = pgTable(
     credentialId: text('credential_id').notNull().unique(),
     credentialRevocationId: text('credential_revocation_id'),
     linkSecretId: text('link_secret_id').notNull(),
-    credential: jsonb('credential')
+    credential: text('credential')
       .$type<Omit<AnonCredsCredential, 'schema_id' | 'cred_def_id' | 'rev_reg_id'>>()
       .notNull(),
     methodName: text('method_name').notNull(),

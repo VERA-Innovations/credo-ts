@@ -1,4 +1,4 @@
-import { jsonb, pgTable } from 'drizzle-orm/pg-core'
+import { pgTable, text } from 'drizzle-orm/pg-core'
 import { getPostgresBaseRecordTable, postgresBaseRecordIndexes } from '../../postgres/baseRecord'
 
 export const genericRecord = pgTable(
@@ -6,7 +6,7 @@ export const genericRecord = pgTable(
   {
     ...getPostgresBaseRecordTable(),
 
-    content: jsonb().notNull().$type<Record<string, unknown>>(),
+    content: text('content').notNull().$type<Record<string, unknown>>(),
   },
   (table) => postgresBaseRecordIndexes(table, 'genericRecord')
 )

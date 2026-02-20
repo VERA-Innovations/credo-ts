@@ -16,7 +16,7 @@ export const didcommQuestionAnswer = sqliteTable(
 
     questionText: text('question_text').notNull(),
     questionDetail: text('question_detail'),
-    validResponses: text('valid_responses', { mode: 'json' }).notNull().$type<ValidResponse[]>(),
+    validResponses: text('valid_responses').notNull().$type<ValidResponse[]>(),
     signatureRequired: integer('signature_required', { mode: 'boolean' }).notNull(),
     response: text(),
   },

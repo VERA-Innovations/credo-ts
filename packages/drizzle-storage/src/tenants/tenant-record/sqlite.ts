@@ -9,8 +9,8 @@ export const tenant = sqliteTable(
     ...getSqliteBaseRecordTable(),
 
     storageVersion: text('storage_version').$type<VersionString>(),
-    config: text({ mode: 'json' }).$type<TenantRecord['config']>().notNull(),
-    label: text().notNull(),
+    config: text('config').$type<TenantRecord['config']>().notNull(),
+    label: text('label').notNull(),
   },
   (table) => sqliteBaseRecordIndexes(table, 'tenant')
 )

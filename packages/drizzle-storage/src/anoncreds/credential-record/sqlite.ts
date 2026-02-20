@@ -10,7 +10,7 @@ export const anonCredsCredential = sqliteTable(
     credentialId: text('credential_id').notNull(),
     credentialRevocationId: text('credential_revocation_id'),
     linkSecretId: text('link_secret_id').notNull(),
-    credential: text('credential', { mode: 'json' })
+    credential: text('credential')
       .$type<Omit<AnonCredsCredential, 'schema_id' | 'cred_def_id' | 'rev_reg_id'>>()
       .notNull(),
     methodName: text('method_name').notNull(),

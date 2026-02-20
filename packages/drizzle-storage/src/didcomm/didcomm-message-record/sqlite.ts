@@ -7,7 +7,7 @@ export const didcommMessage = sqliteTable(
   {
     ...getSqliteBaseRecordTable(),
 
-    message: text({ mode: 'json' }).$type<DidCommPlaintextMessage>().notNull(),
+    message: text().$type<DidCommPlaintextMessage>().notNull(),
     role: text().$type<DidCommMessageRole>().notNull(),
 
     // We can't really put a foreign key on this...

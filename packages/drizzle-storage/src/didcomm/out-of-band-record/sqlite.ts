@@ -12,7 +12,7 @@ export const didcommOutOfBand = sqliteTable(
   {
     ...getSqliteBaseRecordTable(),
 
-    outOfBandInvitation: text('out_of_band_invitation', { mode: 'json' }).$type<DidCommPlaintextMessage>().notNull(),
+    outOfBandInvitation: text('out_of_band_invitation').$type<DidCommPlaintextMessage>().notNull(),
     role: text().$type<DidCommOutOfBandRole>().notNull(),
     state: text().$type<DidCommOutOfBandState>().notNull(),
     alias: text(),

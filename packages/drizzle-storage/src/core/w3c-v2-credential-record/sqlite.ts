@@ -7,7 +7,7 @@ export const w3cV2Credential = sqliteTable(
   {
     ...getSqliteBaseRecordTable(),
 
-    credentialInstances: text('credential_instances', { mode: 'json' })
+    credentialInstances: text('credential_instances')
       .$type<W3cV2CredentialRecordInstances>()
       .notNull(),
 

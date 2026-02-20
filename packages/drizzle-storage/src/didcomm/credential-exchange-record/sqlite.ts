@@ -27,7 +27,7 @@ export const didcommCredentialExchange = sqliteTable(
     credentials: text({ mode: 'json' }).$type<CredentialRecordBinding[]>(),
     credentialIds: text('credential_ids', { mode: 'json' }).$type<string[]>(), // same as credentials, but queryable
 
-    credentialAttributes: text('credential_attributes', { mode: 'json' }).$type<JsonObject[]>(),
+    credentialAttributes: text('credential_attributes').$type<JsonObject[]>(),
   },
   (table) => [
     ...sqliteBaseRecordIndexes(table, 'didcommCredentialExchange'),

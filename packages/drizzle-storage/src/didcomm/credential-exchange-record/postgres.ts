@@ -64,7 +64,7 @@ export const didcommCredentialExchange = pgTable(
     credentials: jsonb().$type<CredentialRecordBinding[]>(),
     credentialIds: text('credential_ids').array(), // same as credentials, but queryable
 
-    credentialAttributes: jsonb('credential_attributes').$type<JsonObject[]>(),
+    credentialAttributes: text('credential_attributes').$type<JsonObject[]>(),
   },
   (table) => [
     ...postgresBaseRecordIndexes(table, 'didcommCredentialExchange'),

@@ -26,7 +26,7 @@ export const didcommMediaSharing = sqliteTable(
     parentThreadId: text('parent_thread_id'),
     description: text('description'),
 
-    items: text('items', { mode: 'json' }).$type<SharedMediaItem[]>(),
+    items: text('items').$type<SharedMediaItem[]>(),
   },
   (table) => [
     ...sqliteBaseRecordIndexes(table, 'didcommMediaSharing'),

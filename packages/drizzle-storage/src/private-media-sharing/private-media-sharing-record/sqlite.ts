@@ -21,7 +21,7 @@ export const didcommPrivateMediaSharing = sqliteTable(
      * SQLite stores JSON as TEXT
      * Drizzle handles serialization/deserialization
      */
-    items: text('items', { mode: 'json' }).$type<PrivateMediaItem[]>(),
+    items: text('items').$type<PrivateMediaItem[]>(),
 
     /** Versioning for optimistic updates / migrations */
     version: text('version'),

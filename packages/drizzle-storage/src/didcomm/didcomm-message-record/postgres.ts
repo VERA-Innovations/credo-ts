@@ -1,5 +1,5 @@
 import type { DidCommMessageRole, DidCommPlaintextMessage } from '@credo-ts/didcomm'
-import { jsonb, pgEnum, pgTable, text } from 'drizzle-orm/pg-core'
+import { pgEnum, pgTable, text } from 'drizzle-orm/pg-core'
 import { getPostgresBaseRecordTable, postgresBaseRecordIndexes } from '../../postgres/baseRecord'
 import { exhaustiveArray } from '../../util'
 
@@ -11,7 +11,7 @@ export const didcommMessage = pgTable(
   {
     ...getPostgresBaseRecordTable(),
 
-    message: jsonb().$type<DidCommPlaintextMessage>().notNull(),
+    message: text().$type<DidCommPlaintextMessage>().notNull(),
     role: didcommMessageRoleEnum().notNull(),
 
     // We can't really put a foreign key on this...
