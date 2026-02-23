@@ -74,16 +74,21 @@ export abstract class BaseDrizzleRecordAdapter<
     this.protectedColumns = ['contextCorrelationId', 'id', 'createdAt', 'updatedAt', ...additionalProtectedColumns]
   }
 
-  public abstract getValues(record: CredoRecord, agentContext?: AgentContext): Promise<DrizzleAdapterValues<SQLiteTable>>
+  public abstract getValues(record: CredoRecord, agentContext?: AgentContext): Promise<any>
   public async getValuesWithBase(agentContext: AgentContext, record: CredoRecord) {
+    const values = await this.getValues(record, agentContext)
     return {
-      ...(await this.getValues(record, agentContext)),
+      ...values,
 
       // Always store based on context correlation id
       contextCorrelationId: agentContext.contextCorrelationId,
 
       id: record.id,
-      metadata: record.metadata.data,
+      // This should probably be avoided for creating/updating connection records. 
+      // To use the metadata received from getValues and not get it overridden
+      metadata: typeof values.metadata === "string" ? values.metadata : record.metadata.data,
+      // If it's already a plain object or string from prepareValuesForDb, use it directly.
+      // metadata: typeof (values as any).metadata === 'string' ? (values as any).metadata !== "{}" ? (values as any).metadata : null : record.metadata.data,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
     }

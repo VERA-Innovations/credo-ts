@@ -55,6 +55,7 @@ export class DrizzleDidcommConnectionRecordAdapter extends BaseDrizzleRecordAdap
       imageUrl: record.imageUrl,
       theirLabel: record.theirLabel,
       protocol: record.protocol,
+      metadata: record.metadata.data,
     }
 
     // Await the asynchronous encryption and stringification
