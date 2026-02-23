@@ -7,6 +7,7 @@ export const didcommConnection = sqliteTable(
   {
     ...getSqliteBaseRecordTable(),
 
+    metadata: text().$type<Record<string, Record<string, unknown> | undefined>>(),
     state: text('state').$type<DidCommDidExchangeState>().notNull(),
     role: text('role').$type<DidCommDidExchangeRole>().notNull(),
 

@@ -36,6 +36,7 @@ export const didcommConnection = pgTable(
   {
     ...getPostgresBaseRecordTable(),
 
+    metadata: text().$type<Record<string, Record<string, unknown> | undefined>>(),
     state: didcommConnectionStateEnum().notNull(),
     role: didcommConnectionRoleEnum().notNull(),
 

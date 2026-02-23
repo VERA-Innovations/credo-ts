@@ -1,2 +1,3 @@
 ALTER TABLE "DidcommCredentialExchange" ALTER COLUMN "credential_attributes" SET DATA TYPE text;--> statement-breakpoint
 ALTER TABLE "DidcommMessage" ALTER COLUMN "message" SET DATA TYPE text;--> statement-breakpoint
+ALTER TABLE "DidcommConnection" ALTER COLUMN "metadata" SET DATA TYPE text;
