@@ -8,8 +8,8 @@ CREATE TABLE "UserProfile" (
 	"display_name" text,
 	"description" text,
 	"preferred_language" text,
-	"display_picture" jsonb,
-	"display_icon" jsonb,
+	"display_picture" text,
+	"display_icon" text,
 	CONSTRAINT "userProfile_pk" PRIMARY KEY("context_correlation_id","id")
 );
 --> statement-breakpoint

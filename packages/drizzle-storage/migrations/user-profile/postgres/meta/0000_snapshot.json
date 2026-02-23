@@ -64,13 +64,13 @@
         },
         "display_picture": {
           "name": "display_picture",
-          "type": "jsonb",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         },
         "display_icon": {
           "name": "display_icon",
-          "type": "jsonb",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         }
